@@ -3,7 +3,7 @@ import { MDBAccordion, MDBAccordionItem, MDBBadge, MDBChip, MDBIcon, MDBInput, M
 import { dialpad, Group, Iconsearch, Profile, Settings } from '../../assets/images'
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { isIOS, isAndroid, isMobile } from 'react-device-detect';
 
 import Constants from "../../config/Constants"
@@ -55,9 +55,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
     const containerRef = useRef(null);
     const messagesRef = useRef([]);
-
     const navigate = useNavigate();
-    const location = useLocation();
 
     var buddy_data = final_data.filter((data) => {
         //return (data.title ? data.title : data.phnumber).toLowerCase().includes(searchString.toLowerCase())
@@ -65,7 +63,6 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
     useEffect(() => {
 
-        console.log('[UsersComponents].useEffect() in onLoad -[]--- :: ' + onLoad);
         //onLoad();
 
     }, [onLoad]);
@@ -79,33 +76,11 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
             let sms_enable_status = localStorage.getItem(Constants.WS_KEY_SMS_ENABLED_STATUS);
             setSMSEnableStatus(sms_enable_status);
 
-            let assigned_did_length = MessageHandler.getSMSAssignedDIDsList();
-            let sms_data_length = MessageHandler.getSMSData(selectedTabIndex).length;
-            let imported_contacts_length = MessageHandler.getContacts(Constants.REQ_CONTACTS_TAB_TYPE.IMPORTED_CONTACTS).length;
+            console.log('[UsersComponents].useEffect() in statement -[]--- sms_enable_status :: ' + sms_enable_status);
 
-            console.log(TAG + "[UsersComponents].useEffect() in statement -[]--- sms_enable_status :: " + sms_enable_status + " :: assigned_did_length :: " + assigned_did_length + " :: sms_data_length :: " + sms_data_length + " :: imported_contacts_length :: " + imported_contacts_length);
-
-            if (assigned_did_length == 0) {
-
-                console.log(TAG + "[UsersComponents].useEffect() in statement -[] SENDING REQ FOR ASIGNED DIDS");
-                SettingsHandler.loadSMSGroupAssignedDIDList();
-            }
-
-            if (sms_data_length == 0) {
-
-                console.log(TAG + "[UsersComponents].useEffect() in statement -[] SENDING REQ FOR SMS DATA");
-                SettingsHandler.loadSMSData(searchString, selectedTabIndex);
-            } else {
-
-                //This is for Mobiles. When we come back to origin window this method will be called. So reset the messages array.
-                reloadSMSGroups(null);
-            }
-
-            if (imported_contacts_length == 0) {
-
-                console.log(TAG + "[UsersComponents].useEffect() in statement -[] SENDING REQ FOR IMPORTED CONTACTS");
-                SettingsHandler.loadContacts(Constants.REQ_CONTACTS_TAB_TYPE.IMPORTED_CONTACTS, '', false);
-            }
+            SettingsHandler.loadSMSGroupAssignedDIDList();
+            SettingsHandler.loadSMSData(searchString, selectedTabIndex);
+            SettingsHandler.loadContacts(Constants.REQ_CONTACTS_TAB_TYPE.IMPORTED_CONTACTS, '', false);
 
 
             unRegisterEmitters();
@@ -114,16 +89,15 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
             const container = containerRef.current;
             if (container) {
 
-                container.removeEventListener("scroll", debouncedHandleScroll);
                 container.addEventListener("scroll", debouncedHandleScroll);
             }
 
-            // return () => {
+            return () => {
 
-            //     if (container) {
-            //         container.removeEventListener("scroll", debouncedHandleScroll);
-            //     }
-            // };
+                if (container) {
+                    container.removeEventListener("scroll", debouncedHandleScroll);
+                }
+            };
 
         } catch (e) {
 
@@ -165,7 +139,6 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
         }
 
     }, [selectedColorTheme]);
-
 
     //==========================        General functions   =================================
     const unRegisterEmitters = () => {
@@ -300,7 +273,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
             console.log("[reloadSMSGroups] ========= data :: " + JSON.stringify(data));
 
-            if (data && data.noData) {//If there is not data in Server DB as well we will get empty response.
+            if (data.noData) {//If there is not data in Server DB as well we will get empty response.
 
                 setLoading(false);
                 loadMoreStatus = false;
@@ -368,7 +341,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                 console.log(TAG + "[onClickSMSItem] isMobile  :: " + isMobile + " ---------- group_code :: " + group_code);
                 if (isMobile || isIOS || isAndroid) {
 
-                    navigate('/didcomponent', { state: member });
+                    navigate('/didcomponent', { state: { member } });
                 } else {
 
                     onClickGroup(member);
@@ -380,7 +353,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
                 if (isMobile || isIOS || isAndroid) {
 
-                    navigate('/chat', { state: member });
+                    navigate('/chat', { state: { member } });
                 } else {
 
                     onClickSMSDID(member);
@@ -742,7 +715,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
                                                     let display_name = ContactsHandler.getMatchedContactName(member.phnumber);
 
-                                                    console.log('[final_data] member ---- index : ' + index + ' :: phnumber :: ' + member.phnumber + " :: display_name :: " + display_name + " :: member :: " + JSON.stringify(member));
+                                                    //console.log('[final_data] member ---- index : ' + index + ' :: phnumber :: ' + member.phnumber + " :: display_name :: " + display_name);// + JSON.stringify(member));
 
                                                     let selectedItem;
                                                     let msg;

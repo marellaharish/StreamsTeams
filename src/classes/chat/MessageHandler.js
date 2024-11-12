@@ -302,25 +302,6 @@ class MessageHandler {
         return messages;
     }
 
-    getSMSAssignedDIDsList() {
-
-        let size = 0;
-        try {
-
-
-            if (this.sms_assigned_groups_didlist) {
-
-                size = this.sms_assigned_groups_didlist.size;
-            }
-
-        } catch (e) {
-
-            console.log(TAG + '[getSMSAssignedGroupsDIDList] Error  -------- :: ' + e);
-        }
-
-        return size;
-    }
-
     getSMSAssignedGroupsDIDList(group_code) {
 
         let didsList = [];
@@ -373,76 +354,48 @@ class MessageHandler {
                 return
             }
 
-            // for (let i = 1; i <= this.sms_data.size; i++) {
+            let message_array = [];
+            let isEntryFound = 0;
+            for (let i = 1; i <= this.sms_data.size; i++) {
 
-            //     if (i === Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS) {
+                if (i === Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS) {
 
-            //         continue;
-            //     }
+                    continue;
+                }
 
-            let message_array = this.getSMSData(Constants.REQ_SMS_TAB_TYPE.ALL_SMS);
+                message_array = this.getSMSData(i);
 
-            message = JSON.parse(message)
+                for (let j = 0; j < message_array.length; j++) {
 
-            let index = -1
-            if (message_array && message_array.length > 0) {
+                    if (message_array[j] && message_array[j].phnumber && ((message_array[j].phnumber * 1) === phnumber * 1)) {
+                        console.log('[updateSMSTabMessage] before message updated ---000-- Tab :: ' + i + " :: msg ::" + JSON.stringify(message_array[j]));
+                        //update the message
+                        /*message_array[j].message = message;
 
-                index = message_array.findIndex((object) => {
+                        if (message_data.unread_count) {
 
-                    let existingMessage = JSON.parse(object.message)
-                    if (message.group_code) {
+                            message_array[j].unread_count = (message_data.unread_count * 1);
+                        }*/
 
-                        return (existingMessage.group_code && (existingMessage.group_code * 1) === (message.group_code * 1) &&
-                            object.phnumber && (object.phnumber * 1) === (phnumber * 1))
 
-                    } else {
+                        //console.log('[updateSMSTabMessage] before message updated ----- Tab :: ' + i + " :: msg ::" + JSON.stringify(message_array[j]));
 
-                        return (!existingMessage.group_code && object.phnumber && (object.phnumber * 1) === (phnumber * 1))
+                        let new_msg = message_data;//message_array[j];
+
+                        message_array.splice(j, 1);
+                        message_array.unshift(new_msg);
+                        isEntryFound = 1;
+
+                        //console.log('after message updated ----- ' + JSON.stringify(message_array[j].message));
+                        break;
                     }
-                });
+                }
 
-            } else {
+                if (isEntryFound == 0) {
 
-                message_array = []
+                    message_array.push(message_data);
+                }
             }
-
-            console.log(TAG + '[updateSMSTabMessage] -- index : ' + index)
-
-            if (index !== -1) {
-
-                message_array.splice(index, 1)
-            }
-
-            message_array.unshift(message_data)
-
-            // for (let j = 0; j < message_array.length; j++) {
-
-            //     let message_data_obj = message_array[j];
-            //     let message_obj = JSON.parse(message_data_obj.message);
-
-            //     let group_code = message_obj.group_code ? message_obj.group_code : undefined;
-
-            //     if (message_data_obj && message_data_obj.phnumber && ((message_data_obj.phnumber * 1) === phnumber * 1)) {
-
-            //         if (message.group_code && group_code) {
-
-            //             if (!group_code || ((group_code * 1) !== message.group_code * 1)) {
-
-            //                 console.log('[updateSMSTabMessage] before message updated ---1111-- Tab :: ' + i + " :: msg ::" + JSON.stringify(message_data_obj));
-            //                 continue;
-            //             }
-
-            //         }
-
-            //         console.log('[updateSMSTabMessage] message_data_obj ----- ' + JSON.stringify(message_data_obj) + ', index: ' + j);
-            //         message_array.splice(j, 1);
-            //         break;
-            //     }
-
-            // }
-            //}
-
-            // message_array.unshift(message_data);
 
         } catch (e) {
 

@@ -1,23 +1,21 @@
+import { Copy, Delete, Edit, Reply, Send } from '../../assets/images';
+import { REQ_TYPE_SMS_ACTION } from "../../config/Constants";
 import Attachments from './Attachments';
-import Utils from '../../classes/utils/util';
-import { Comment, Copy, Delete, Emoji, Forward, Edit, Reply, Profile, Send, Upload, Settings } from '../../assets/images';
-import Constants, { REQ_TYPE_SMS_ACTION } from "../../config/Constants"
 
 import {
     MDBBtn,
-    MDBModal,
-    MDBModalDialog,
-    MDBModalContent,
-    MDBModalHeader,
-    MDBModalTitle,
-    MDBModalBody,
-    MDBModalFooter,
-    MDBInput,
     MDBCheckbox,
     MDBIcon,
+    MDBInput,
+    MDBModal,
+    MDBModalBody,
+    MDBModalContent,
+    MDBModalDialog,
+    MDBModalFooter,
+    MDBModalHeader,
+    MDBModalTitle,
     MDBTextArea
 } from 'mdb-react-ui-kit';
-import { el } from 'date-fns/locale';
 
 class ChatComponents {
 
@@ -52,7 +50,7 @@ class ChatComponents {
 
             return (
 
-                <div className='w-100'>
+                <div className='ps-0 w-100'>
 
                     <div>
 
@@ -96,6 +94,7 @@ class ChatComponents {
                                                 </>
 
                                             )}
+
 
                                         </p>
                                     </div>

@@ -41,7 +41,7 @@ class StreamsHandler {
                 from_user: login_user,
                 message: JSON.stringify(message),
                 smsgid: "",
-                type: Constants.REQ_TYPE_CHAT.WS_OUTGOING_MESSAGE,
+                type: Constants.REQ_TYPE_CHAT.WS_OUTGOING_CHAT_MESSAGE,
                 msgtype: msg_type,
                 //sent_status: 0,
                 sid: sms_id,
@@ -126,7 +126,7 @@ class StreamsHandler {
                 from_user: login_user,
                 message: JSON.stringify(message),
                 smsgid: "",
-                type: Constants.REQ_TYPE_CHAT.WS_OUTGOING_MESSAGE,
+                type: Constants.REQ_TYPE_CHAT.WS_OUTGOING_CHAT_MESSAGE,
                 msgtype: msg_type,
                 //sent_status: 0,
                 sid: sms_id,
@@ -164,32 +164,24 @@ class StreamsHandler {
 
             console.log(TAG + '[onIncomingMessage] data :: ' + JSON.stringify(element));
 
-            let sid = '';//(element.sid && Object.keys(element.sid).length) ? element.sid : '';
-            //let isMute = element.mute && element.mute.length > 0 ? true : false;
-            let soundFiled = element.sfid ? element.sfid : "";
+            let sid = '';//(element.sid && Object.keys(element.sid).length) ? element.sid.Value : '';
+            //let isMute = element.mute.Value && element.mute.Value.length > 0 ? true : false;
+            let soundFiled = element.sfid ? element.sfid.Value : "";
 
-            let bEchoStatus = false;
-
-            if (element.fromuser === login_user) {
-
-                bEchoStatus = true;
-            }
-
-            let type = bEchoStatus == true ? Constants.REQ_TYPE_CHAT.WS_OUTGOING_MESSAGE : Constants.REQ_TYPE_CHAT.WS_INCOMING_MESSAGE;
-
+            let type = Constants.REQ_TYPE_CHAT.WS_INCOMING_CHAT_MESSAGE;
             let message_data = {
 
                 cid: '',
-                tname: element.tname,
-                from_user: element.fromuser,
-                message: element.msg,
-                msgtype: element.msgtype,
+                tname: element.tname.Value,
+                from_user: element.fromuser.Value,
+                message: element.msg.Value,
+                msgtype: element.msgtype.Value,
                 type: type,
                 id: Date.now(),
                 latest_time: new Date().toISOString(),
                 direct: 1,
                 extramsg: "",
-                smsgid: element.smsgid,
+                smsgid: element.smsgid.Value,
                 delivery_status: 1,
                 //sent_status: 0,
                 direction: 0,
@@ -206,7 +198,7 @@ class StreamsHandler {
 
             if (echo_status) {
 
-                message_data.type = Constants.REQ_TYPE_CHAT.WS_OUTGOING_MESSAGE;
+                message_data.type = Constants.REQ_TYPE_CHAT.WS_OUTGOING_CHAT_MESSAGE;
                 //message_data.sent_status = 1;
             }
 
@@ -214,17 +206,17 @@ class StreamsHandler {
             let is_group_sms;
 
             if (element.msgtype &&
-                (element.msgtype == IMConstants.WS_IM_SMS ||
-                    element.msgtype == IMConstants.WS_IM_MMS)) {
+                (element.msgtype.Value == IMConstants.WS_IM_SMS ||
+                    element.msgtype.Value == IMConstants.WS_IM_MMS)) {
 
-                type = Constants.REQ_TYPE_CHAT.WS_INCOMING_MESSAGE;
+                type = Constants.REQ_TYPE_SMS_CHAT.WS_INCOMING_SMS_MESSAGE;
 
-                let message = JSON.parse(element.msg);
+                let message = JSON.parse(element.msg.Value);
 
                 //Non Stream user send SMS so he don't have sid. Instead of sid we are storing Phnum as sid.
                 if (!sid || sid.length == 0 | sid === 0) {
 
-                    sid = element.phnum;
+                    sid = element.phnum.Value;
                 }
 
                 let tname = message_data.tname;
@@ -237,7 +229,7 @@ class StreamsHandler {
                     /*In Group SMS if someone sent OB message others also will get that message through MADM, so we should not show 
                         unread count for those message. For this treat that message as IB though it's OB.
                         */
-                    type = Constants.REQ_TYPE_CHAT.WS_OUTGOING_MESSAGE;
+                    type = Constants.REQ_TYPE_SMS_CHAT.WS_OUTGOING_SMS_MESSAGE;
 
                     /*This is Incoming Group SMS. With in the same group multiple people can send SMS messages so for other users in 
                         the group those are OUTBOUND messages only.
@@ -245,34 +237,33 @@ class StreamsHandler {
                     console.log('[onIncomingMessage] direction: ' + message.direction);
                     if (message.direction && (message.direction * 1) === 2) {
 
-                        type = Constants.REQ_TYPE_CHAT.WS_INCOMING_MESSAGE;
+                        type = Constants.REQ_TYPE_SMS_CHAT.WS_INCOMING_SMS_MESSAGE;
                     }
 
-                    sid = message.group_code + "_" + element.phnum
+                    sid = message.group_code + "_" + element.phnum.Value
                     tname = message.group_title;
 
-                    //did_unreadcount = this.getSMSDIDUnreadCount(message.group_code, element.phnum);
                 }
 
+                //sent_status = (type === Constants.REQ_TYPE_SMS_CHAT.WS_INCOMING_SMS_MESSAGE ? 1 : 0);
+                unreadCount = this.getSMSUnreadCount(message.group_code, element.phnum.Value);
+
+                console.log(TAG + "[onIncomingMessage] This is group SMS. type :: " + type + " :: unreadCount :: " + unreadCount);
+
                 message_data.sid = sid;
-                message_data.phnum = element.phnum;
-                message_data.phnumber = element.phnum;
+                message_data.phnum = element.phnum.Value;
+                message_data.phnumber = element.phnum.Value;
                 //message_data.type = type;
                 message_data.direction = type;
                 message_data.tname = tname;
                 //message_data.sent_status = sent_status;
 
-            }
+                //Update Unread Count.
+                if (type !== Constants.REQ_TYPE_SMS_CHAT.WS_OUTGOING_SMS_MESSAGE) {
 
-            unreadCount = this.getUnreadCount(message_data);
-
-            console.log(TAG + "[onIncomingMessage] This is group SMS. type :: " + type + " :: unreadCount :: " + unreadCount);
-
-            //Update Unread Count.
-            if (bEchoStatus == false && type == Constants.REQ_TYPE_CHAT.WS_INCOMING_MESSAGE) {
-
-                unreadCount = (unreadCount * 1) + 1;
-                console.log(TAG + "[onIncomingMessage] direction ----- unreadCount :: " + unreadCount);
+                    unreadCount = (unreadCount * 1) + 1;
+                    console.log(TAG + "[onIncomingMessage] direction ----- unreadCount :: " + unreadCount);
+                }
             }
 
             message_data.unread_count = unreadCount;
@@ -292,7 +283,7 @@ class StreamsHandler {
             EvntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, message_data);
             EvntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_GROUPS_RECEIVED, {});
 
-            IMHandler.sendAck(data.Message.id, element.smsgid, element.msgtype)
+            IMHandler.sendAck(data.Message.ParamsId.id, element.smsgid.Value, element.msgtype.Value)
 
             //Show Notification
 
@@ -362,8 +353,8 @@ class StreamsHandler {
             const cid = Utils.getTimeStamp();
             let data = [
                 IMConstants.PROTO_IM_GROUP_CHAT_MSG_READ_STATUS,
-                (messageData.msgtype === IMConstants.WS_IM_SMS || messageData.msgtype === IMConstants.WS_IM_MMS) ? '' : sid, // SID
                 messageData.smsgid,
+                sid, // SID
                 cid, // CID,
                 temp_phnumber ? temp_phnumber : "",
                 msg
@@ -407,17 +398,32 @@ class StreamsHandler {
 
                 if (object.msgtype === IMConstants.WS_IM_MMS || object.msgtype === IMConstants.WS_IM_SMS) {
 
-                    const existingMessage = object.message ? JSON.parse(object.message) : object;
-                    if (msg_group_code) {
+                    const messageData = object.message ? JSON.parse(object.message) : object;
 
-                        return (existingMessage.group_code && (existingMessage.group_code * 1) === (msg_group_code * 1) &&
-                            object.phnumber && (object.phnumber * 1) === (msg_phnumber * 1))
-
-                    } else {
-
-                        return (!existingMessage.group_code && object.phnumber && (object.phnumber * 1) === (msg_phnumber * 1))
+                    //console.log(TAG + "[clearUnreadCount] messageData :----: " + JSON.stringify(messageData) + " :: msg_group_code :: " + msg_group_code + " :: msg_phnumber :: " + msg_phnumber);
+                    // Group SMS or Group with one recipient check
+                    if (
+                        msg_group_code &&
+                        messageData.group_code &&
+                        (messageData.group_code * 1) === (msg_group_code * 1) &&
+                        msg_phnumber &&
+                        object.phnumber &&
+                        (object.phnumber * 1) === (msg_phnumber * 1)
+                    ) {
+                        console.log(TAG + "[clearUnreadCount] Group SMS check matched");
+                        return true;
                     }
 
+                    // 1-1 SMS check
+                    if (
+                        !messageData.group_code &&
+                        msg_phnumber &&
+                        object.phnumber &&
+                        (object.phnumber * 1) === (msg_phnumber * 1)
+                    ) {
+                        console.log(TAG + "[clearUnreadCount] 1-1 SMS check matched");
+                        return true;
+                    }
                 }
 
                 // SID match check
@@ -461,12 +467,18 @@ class StreamsHandler {
         }
     }
 
-    getSMSDIDUnreadCount(group_code, phnumber) {
+    getSMSUnreadCount(group_code, phnumber) {
 
         let unreadcount = 0;
         try {
 
             let did_list = MessageHandler.getSMSGroupDIDs(group_code);
+
+            if (!did_list || did_list.length === 0) {
+
+                did_list = MessageHandler.getSMSData(Constants.REQ_SMS_TAB_TYPE.ALL_SMS);
+            }
+
             for (let i = 0; i < did_list.length; i++) {
 
                 if (did_list[i].phnumber === phnumber) {
@@ -475,66 +487,6 @@ class StreamsHandler {
                     unreadcount = did_list[i].unread_count;
                     break;
                 }
-            };
-
-        } catch (e) {
-            console.log(TAG + '[getSMSDIDUnreadCount] ERROR  -------- :: ' + e);
-        }
-
-        return unreadcount;
-    }
-
-    getUnreadCount(message_data) {
-
-        let unreadcount = 0;
-        try {
-
-            console.log(TAG + '[getUnreadCount] message_data :: ' + JSON.stringify(message_data));
-
-            let msg_data = message_data;
-            let phnumber;
-
-            if (message_data.msgtype == IMConstants.WS_IM_SMS ||
-                message_data.msgtype == IMConstants.WS_IM_MMS) {
-
-                msg_data = JSON.parse(message_data.message);
-                phnumber = message_data.phnumber
-            }
-
-            let message_array = MessageHandler.getSMSData(Constants.REQ_SMS_TAB_TYPE.ALL_SMS);
-
-            for (let i = 0; i < message_array.length; i++) {
-
-                let existingData = message_array[i]
-                if (message_data.msgtype == IMConstants.WS_IM_SMS ||
-                    message_data.msgtype == IMConstants.WS_IM_MMS) {
-
-                    let existingMessage = JSON.parse(existingData.message);
-
-                    if (msg_data.group_code) {
-
-                        if (existingMessage.group_code && (existingMessage.group_code * 1) === (msg_data.group_code * 1) &&
-                            existingData.phnumber && (existingData.phnumber * 1) === (phnumber * 1)) {
-
-                            //console.log(TAG + '[getUnreadCount] -- object : ' + JSON.stringify(existingData))
-                            unreadcount = existingData.unread_count
-                            break
-                        }
-
-                    } else {
-
-                        if (!existingMessage.group_code && existingData.phnumber && (existingData.phnumber * 1) === (phnumber * 1)) {
-
-                            //onsole.log(TAG + '[getUnreadCount] -- object 55555: ' + JSON.stringify(existingData))
-                            unreadcount = existingData.unread_count
-                            break
-                        }
-                    }
-
-                } else {
-
-                }
-
             };
 
         } catch (e) {

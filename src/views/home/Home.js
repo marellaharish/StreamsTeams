@@ -17,8 +17,6 @@ import Welcome from './Welcome';
 import Params from '../../config/Params'
 import Utils from '../../classes/utils/util';
 
-let TAG = "[Home.js].";
-
 const HomePage = () => {
 
   const location = useLocation();
@@ -42,7 +40,7 @@ const HomePage = () => {
 
   const handleComponentLoad = (component) => {
 
-    console.log(TAG + "[handleComponentLoad] -- component :: " + component);
+    console.log("[handleComponentLoad] -- component :: " + component);
 
     setComponentsLoaded((prevState) => ({
       ...prevState,
@@ -57,11 +55,9 @@ const HomePage = () => {
   }, [smsgroupdata]);
     */
 
-  //=============================       useEffect's     ==================================
-
   useEffect(() => {
 
-    console.log(TAG + '.useEffect() in statement ----');
+    console.log('[Home].useEffect() in statement ----');
 
     //evntEmitter.removeAllListeners();
 
@@ -73,9 +69,8 @@ const HomePage = () => {
     const queryParams = new URLSearchParams(location.search);
 
     const group_code = queryParams.get('group_code');
-    console.log(TAG + "groupd_code :: " + group_code);
+    console.log("groupd_code :: " + group_code);
 
-    //If there is no theme set then default is Dark theme.
     const theme = localStorage.getItem('selectedColorTheme');
     if (!theme) {
 
@@ -85,138 +80,9 @@ const HomePage = () => {
       body.setAttribute("data-theme", "dark");
     }
 
-    const handleKeyDown = (event) => {
-
-      if (event.key === 'Escape') {
-
-        setSelectedUserStatus(false);
-        setSelectedUser(null)
-      }
-    };
-
-    // Attach the event listener
-    window.removeEventListener('keydown', handleKeyDown);
-    window.addEventListener('keydown', handleKeyDown);
-
-    console.log(TAG + "keydown Keyboard [addEventListener]----------Pressed")
-
-    // Cleanup the event listener on component unmount
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      console.log(TAG + "keydown Keyboard [removeEventListener]----------relesed")
-    };
 
   }, []);
 
-  useEffect(() => {
-
-    try {
-
-      if (!location.state) return;
-      if (!isMobile) return;
-
-      console.log(TAG + '[useEffect].[location.state] ---- location.state ::' + JSON.stringify(location.state));
-
-      if (location.state.member_data) {
-
-      } else if (location.state) {
-
-      }
-
-    } catch (e) {
-
-      console.log(TAG + "[useEffect].[location.state] :: ERROR :: " + e);
-    }
-
-  }, [location.state]);
-
-
-  //=============================      CLICK Functinos     ==================================
-  const handleKeyDown = (event) => {
-    if (event.key === 'Escape') {
-
-      setSelectedContact(null)
-    }
-  };
-
-  const handleEvent = (msg) => {
-
-    console.log(TAG + "[handleEvent] ---- " + JSON.stringify(msg));
-  };
-
-  const onClickSMSDID = (did_data) => {
-
-    try {
-
-      console.log(TAG + '.onClickSMSDID() -- ');
-
-      setDIDSelectStatus(true);
-      setUserData(did_data);
-      setSelectedContact(null);
-
-    } catch (e) {
-
-      console.log(TAG + '[onClickSMSDID] Error :: ' + e);
-    }
-  }
-
-  const onClickGroup = (sms_group_data) => {
-
-    try {
-      console.log(TAG + '.onClickGroup() -- ');
-
-      setDIDSelectStatus(false);
-      setGroupSelectStatus(true);
-      setSMSGroupData(sms_group_data);
-      setSelectedContact(null);
-
-    } catch (e) {
-
-      console.log(TAG + '[onClickGroup] Error :: ' + e);
-    }
-  }
-
-  const onSelectIndividualSMS = () => {
-
-    try {
-
-      console.log(TAG + '.onSelectIndividualSMS() -- ');
-
-      setDIDSelectStatus(false);
-      setGroupSelectStatus(false);
-      setSelectedContact(null);
-
-    } catch (e) {
-
-      console.log(TAG + '[onSelectIndividualSMS] Error :: ' + e);
-    }
-  }
-
-  const onContactSelect = (user, e) => {
-
-    try {
-      console.log(TAG + '.onContactSelect() -- ');
-      setSelectedContact(user);
-      setGroupSelectStatus(false)
-
-    } catch (e) {
-
-      console.log(TAG + '[onContactSelect] Error :: ' + e);
-    }
-
-    console.log(TAG + ".[onContactSelect] :: " + user + " user Clicked in dialpad search");
-  };
-
-  const dailpadNumberClick = (user, e) => {
-
-    setSelectedUser(user);
-    setSelectedUserStatus(true)
-    setGroupSelectStatus(false)
-    console.log(TAG + ".[dailpadNumberClick] :: " + user + "user Clicked in search", selectedUserStatus)
-  };
-
-
-  //=============================      GENERAL Functinos     ==================================
   const unRegisterEvents = () => {
 
     try {
@@ -225,7 +91,7 @@ const HomePage = () => {
       window.removeEventListener('keydown', handleKeyDown);
     } catch (e) {
 
-      console.log(TAG + '[unRegisterEvents] Error :: ' + e);
+      console.log('[unRegisterEvents] Error :: ' + e);
     }
 
   }
@@ -239,7 +105,7 @@ const HomePage = () => {
 
     } catch (e) {
 
-      console.log(TAG + '[registerEvents] Error :: ' + e);
+      console.log('[registerEvents] Error :: ' + e);
     }
 
   }
@@ -248,27 +114,33 @@ const HomePage = () => {
 
     try {
 
-      console.log(TAG + '[onLoadHomePage] ----------- isIMConnected :: ' + IMConnector.isIMConnected());
+      console.log('[onLoadHomePage] ----------- ');
 
-      console.log(TAG + '[onLoadHomePage] SETTING THE COOKIE ----------- ');
       //Shift this to Login page.
       let xauthtoken = localStorage.getItem(Params.WS_XAUTH_TOKEN)
       Utils.setCookie(Params.COOKIE_XAUTHTOKEN, xauthtoken)
 
-      let imConnectStatus = IMConnector.isIMConnected();
-      if (imConnectStatus == undefined ||
-        imConnectStatus == null ||
-        imConnectStatus == false) {
+      IMConnector.connectToIM();
 
-        IMConnector.connectToIM();
-        SettingsHandler.loadUserSMSDIDSettings();
-      }
+      SettingsHandler.loadUserSMSDIDSettings();
 
     } catch (e) {
 
-      console.log(TAG + '[onLoadHomePage] Error :: ' + e);
+      console.log('[onLoadHomePage] Error :: ' + e);
     }
   }
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape') {
+
+      setSelectedContact(null)
+    }
+  };
+
+  const handleEvent = (msg) => {
+
+    console.log("[handleEvent] ---- " + JSON.stringify(msg));
+  };
 
   const getPlatformNew = () => {
 
@@ -288,7 +160,7 @@ const HomePage = () => {
   const getPlatform = () => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
 
-    console.log(TAG + '[getPlatform] userAgent --------- ' + userAgent);
+    console.log('userAgent --------- ' + userAgent);
 
     // Check for iOS
     if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
@@ -304,8 +176,101 @@ const HomePage = () => {
     return 'Web';
   };
 
+  const onClickSMSDID = (did_data) => {
 
-  console.log(TAG + "platform --- " + getPlatform() + " :: getPlatformNew :: " + getPlatformNew() + " :: isMobile :: " + isMobile);
+    try {
+
+      console.log('[Home.js].onClickSMSDID() -- ');
+
+      setDIDSelectStatus(true);
+      setUserData(did_data);
+      setSelectedContact(null);
+
+    } catch (e) {
+
+      console.log('[onClickSMSDID] Error :: ' + e);
+    }
+  }
+
+  const onClickGroup = (sms_group_data) => {
+
+    try {
+      console.log('[Home.js].onClickGroup() -- ');
+
+      setDIDSelectStatus(false);
+      setGroupSelectStatus(true);
+      setSMSGroupData(sms_group_data);
+      setSelectedContact(null);
+
+    } catch (e) {
+
+      console.log('[onClickGroup] Error :: ' + e);
+    }
+  }
+
+  const onSelectIndividualSMS = () => {
+
+    try {
+
+      console.log('[Home.js].onSelectIndividualSMS() -- ');
+
+      setDIDSelectStatus(false);
+      setGroupSelectStatus(false);
+      setSelectedContact(null);
+
+    } catch (e) {
+
+      console.log('[onSelectIndividualSMS] Error :: ' + e);
+    }
+  }
+
+  const onContactSelect = (user, e) => {
+
+    try {
+      console.log('[Home.js].onContactSelect() -- ');
+      setSelectedContact(user);
+      setGroupSelectStatus(false)
+
+    } catch (e) {
+
+      console.log('[onContactSelect] Error :: ' + e);
+    }
+
+    console.log(user + " user Clicked in dialpad search");
+  };
+
+  const dailpadNumberClick = (user, e) => {
+
+    setSelectedUser(user);
+    setSelectedUserStatus(true)
+    setGroupSelectStatus(false)
+    console.log(user, "user Clicked in search", selectedUserStatus)
+  };
+
+  useEffect(() => {
+
+    const handleKeyDown = (event) => {
+
+      if (event.key === 'Escape') {
+
+        setSelectedUserStatus(false);
+        setSelectedUser(null)
+      }
+    };
+
+    // Attach the event listener
+    window.addEventListener('keydown', handleKeyDown);
+    console.log("keydown Keyboard [addEventListener]----------Pressed")
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      console.log("keydown Keyboard [removeEventListener]----------relesed")
+    };
+  }, []);
+
+
+  console.log("platform --- " + getPlatform() + " :: getPlatformNew :: " + getPlatformNew() + " :: isMobile :: " + isMobile);
 
   return (
     <>

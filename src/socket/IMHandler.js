@@ -23,7 +23,7 @@ class IMHandler {
 
         try {
 
-            let id = parseInt(rcvData.Message.id)
+            let id = parseInt(rcvData.Message.ParamsId.id)
             console.log('[processIncomingMessage] -- id --- ' + id);
 
             if (id != IMConstants.PROTO_SERVER_PING_IMSERVER && id != IMConstants.PROTO_PING_IMSERVER) {
@@ -228,7 +228,7 @@ class IMHandler {
 
             console.log('[onChatMessage] data: ' + JSON.stringify(data))
 
-            if (data.Message.pstream && data.Message.pstream == 1) {
+            if (data.Message.pstream && data.Message.pstream.Value == 1) {
 
                 console.log('[onChatMessage]   == HANDLE PENDING EVENTS == : ')
                 this.onReceivePendingMessages(data)
@@ -237,6 +237,54 @@ class IMHandler {
 
             StreamsHandler.onIncomingMessage(data, data.Message);
 
+            /*
+            let sid;
+
+            const message_data = {
+
+                cid: '',
+                tname: data.Message.tname.Value,
+                from_user: data.Message.fromuser.Value,
+                message: data.Message.msg.Value,
+                msgtype: data.Message.msgtype,
+                type: Constants.REQ_TYPE_CHAT.WS_INCOMING_CHAT_MESSAGE,
+                id: Date.now(),
+                messagetime: time,
+                direct: 1,
+                extramsg: "",
+                smsgid: data.Message.smsgid.Value,
+                direction: 2,
+                delivery_status: 1
+            }
+
+            // handle Incoming SMS protocol and save the message details in local to show
+            if (data.Message.msgtype &&
+                (data.Message.msgtype.Value == IMConstants.WS_IM_SMS ||
+                    data.Message.msgtype.Value == IMConstants.WS_IM_MMS)) {
+
+                var time = moment(Date(data.Message.time.Value)).utc().format('HH:mm a');
+
+                let message = JSON.parse(data.Message.msg.Value);
+
+                sid = data.Message.phnum.Value
+
+                if (message.group_code) {
+
+                    sid = message.group_code + "_" + data.Message.phnum.Value
+                }
+
+                message_data.sid = sid;
+                message_data.phnum = data.Message.phnum.Value;
+                message_data.phnumber = data.Message.phnum.Value;
+
+            }
+
+            MessageHandler.addSMSMessage(sid, message_data);
+
+            EvntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, message_data);
+
+            this.sendAck(data.Message.ParamsId.id, data.Message.smsgid.Value, data.Message.msgtype.Value)
+            */
         } catch (e) {
 
             console.log('[IMHandler].onChatMessage Error :: ' + e);
@@ -251,7 +299,52 @@ class IMHandler {
             data.Message.msginfo.forEach((element) => {
 
                 StreamsHandler.onIncomingMessage(data, element);
+
+                /*
+                let sid;
+
+                const message_data = {
+
+                    cid: '',
+                    tname: element.tname.Value,
+                    from_user: element.fromuser.Value,
+                    message: element.msg.Value,
+                    msgtype: element.msgtype.Value,
+                    type: Constants.REQ_TYPE_CHAT.WS_INCOMING_CHAT_MESSAGE,
+                    id: Date.now(),
+                    messagetime: time,
+                    direct: 1,
+                    extramsg: "",
+                    smsgid: element.smsgid.Value,
+                    direction: 2,
+                    delivery_status: 1
+                }
+
+                if (element.msgtype &&
+                    (element.msgtype.Value == IMConstants.WS_IM_SMS ||
+                        element.msgtype.Value == IMConstants.WS_IM_MMS)) {
+
+                    var time = moment(Date(element.time.Value)).utc().format('HH:mm a');
+
+                    let message = JSON.parse(element.msg.Value);
+
+                    if (message.group_code) {
+
+                        sid = message.group_code + "_" + element.phnum.Value
+                    }
+
+                    message_data.sid = sid;
+                    message_data.phnum = element.phnum.Value;
+                    message_data.phnumber = element.phnum.Value;
+                }
+
+                MessageHandler.addSMSMessage(sid, message_data);
+
+                this.sendAck(data.Message.ParamsId.id, element.smsgid.Value, element.msgtype.Value)
+                */
             })
+
+            //EvntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, message_data);
 
         } catch (e) {
             console.log('[IMHandler].onReceivePendingMessages Error :: ' + e);
@@ -263,21 +356,21 @@ class IMHandler {
 
         try {
 
-            if (data.Message.pstream && data.Message.pstream == 1) {
+            if (data.Message.pstream && data.Message.pstream.Value == 1) {
 
                 console.log(TAG + '[onReceiveMessageAck]   == HANDLE PENDING EVENTS == : ')
 
                 data.Message.msginfo.forEach((element) => {
 
-                    this.processMessageReceiveACK(element.cid, element.smsgid);
+                    this.processMessageReceiveACK(element.cid.Value, element.smsgid.Value);
                 })
 
                 return
             }
 
-            console.log(TAG + '[onReceiveMessageAck] --- cid : ' + data.Message.cid)
+            console.log(TAG + '[onReceiveMessageAck] --- cid : ' + data.Message.cid.Value)
 
-            this.processMessageReceiveACK(data.Message.cid, data.Message.smsgid);
+            this.processMessageReceiveACK(data.Message.cid.Value, data.Message.smsgid.Value);
 
         } catch (e) {
 
@@ -292,7 +385,7 @@ class IMHandler {
 
             console.log('[onReceiveSMSACK] =================  ');
 
-            if (data.Message.pstream && data.Message.pstream == 1) {
+            if (data.Message.pstream && data.Message.pstream.Value == 1) {
 
                 console.log('[onReceiveSMSACK]   == HANDLE PENDING EVENTS == : ')
 
@@ -318,9 +411,9 @@ class IMHandler {
 
         try {
 
-            let name = data.Message.XMLChatter.name;
+            let name = data.Message.XMLChatter.ParamsId.name;
 
-            let strStatusMsg = data.Message.XMLChatter.status.replace(/\+/g, " ");
+            let strStatusMsg = data.Message.XMLChatter.ParamsId.status.replace(/\+/g, " ");
             if (strStatusMsg != null && strStatusMsg.indexOf("+") !== -1) {
                 strStatusMsg = strStatusMsg.replace(/\+/g, " ");
             }
@@ -345,7 +438,7 @@ class IMHandler {
                 EvntEmitter.emit(EmitterConstants.EMMIT_ON_IM_CONNECT, {})
             }
 
-            this.sendAck(data.Message.id, data.Message.XMLChatter.smsgid, '')
+            this.sendAck(data.Message.ParamsId.id, data.Message.XMLChatter.ParamsId.smsgid, '')
 
         } catch (e) {
 
@@ -504,21 +597,21 @@ class IMHandler {
 
         try {
 
-            if (data.Message.pstream && data.Message.pstream == 1) {
+            if (data.Message.pstream && data.Message.pstream.Value == 1) {
 
                 console.log('[onReceiveMessageReadStatusAck]   == HANDLE PENDING EVENTS == : ')
                 // this.onReceivePendingMessageAck(data)
                 return
             }
 
-            let cid = data.Message.cid;
+            let cid = data.Message.cid.Value;
             console.log('[onReceiveMessageReadStatusAck] --- cid : ' + cid + ', smsPendigList size: ' + smsPendigList.size)
 
             if (cid && smsPendigList && smsPendigList.size > 0) {
                 smsPendigList.delete(cid);
             }
 
-            this.sendAck(data.Message.id, data.Message.smsgid, '')
+            this.sendAck(data.Message.ParamsId.id, data.Message.smsgid.Value, '')
 
         } catch (e) {
             console.log('[IMHandler].onReceiveMessageReadStatusAck Error :: ' + e);
@@ -530,7 +623,7 @@ class IMHandler {
 
         try {
 
-            if (data.Message.pstream && data.Message.pstream == 1) {
+            if (data.Message.pstream && data.Message.pstream.Value == 1) {
 
                 console.log(TAG + '[onReceiveMessageReadStatus]   == HANDLE PENDING EVENTS == : ')
                 return
@@ -538,10 +631,10 @@ class IMHandler {
 
             console.log(TAG + '[onReceiveMessageReadStatus]   data: ' + JSON.stringify(data));
 
-            let sid = data.Message.sid;
-            let readSmsgid = data.Message.readsmsgid;
-            let phnumber = data.Message.phnum ? data.Message.phnum : "";
-            let msgData = data.Message.msg ? JSON.parse(data.Message.msg) : undefined;
+            let sid = data.Message.sid.Value;
+            let readSmsgid = data.Message.readsmsgid.Value;
+            let phnumber = data.Message.phnum ? data.Message.phnum.Value : "";
+            let msgData = data.Message.msg ? JSON.parse(data.Message.msg.Value) : undefined;
 
             console.log(TAG + 'onReceiveMessageReadStatus sid :: ' + sid);
 
@@ -567,7 +660,7 @@ class IMHandler {
 
             StreamsHandler.clearUnreadCount(msg_data);
 
-            this.sendAck(data.Message.id, data.Message.smsgid, '')
+            this.sendAck(data.Message.ParamsId.id, data.Message.smsgid.Value, '')
 
         } catch (e) {
             console.log('[IMHandler].onReceiveMessageReadStatus Error :: ' + e);
@@ -579,7 +672,7 @@ class IMHandler {
 
         try {
 
-            if (data.Message.pstream && data.Message.pstream == 1) {
+            if (data.Message.pstream && data.Message.pstream.Value == 1) {
 
                 console.log('[onReceiveMessageReadStatusAck]   == HANDLE PENDING EVENTS == : ')
                 data.Message.msginfo.forEach((element) => {
@@ -607,15 +700,15 @@ class IMHandler {
 
         try {
 
-            let orgsmsgid = element.orgsmsgid;
-            let phnumber = element.phnum
-            let msgData = JSON.parse(element.msg)
+            let orgsmsgid = element.orgsmsgid.Value;
+            let phnumber = element.phnum.Value
+            let msgData = JSON.parse(element.msg.Value)
 
-            let sid = element.sid ? element.sid : '';
+            let sid = element.sid ? element.sid.Value : '';
 
-            if (element.phnum) {
+            if (element.phnum.Value) {
 
-                sid = element.phnum;
+                sid = element.phnum.Value;
             }
 
             if (msgData && msgData != undefined && msgData.group_code && msgData.group_code != undefined) {
@@ -654,7 +747,7 @@ class IMHandler {
 
                 EvntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, messageData);
 
-                this.sendAck(IMConstants.PROTO_IM_SMS_ACK, element.smsgid, messageData.msgtype)
+                this.sendAck(IMConstants.PROTO_IM_SMS_ACK, element.smsgid.Value, messageData.msgtype)
             }
 
 
@@ -699,7 +792,6 @@ class IMHandler {
                     this.sendAck(IMConstants.PROTO_IM_GROUP_CHAT_MSG_ACK, smsgid, messageData.msgtype)
 
                     EvntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, messageData);
-
                 }
 
             }
@@ -756,7 +848,7 @@ class IMHandler {
 
         try {
 
-            let orgsmsgid = element.orgsmsgid;
+            let orgsmsgid = element.orgsmsgid.Value;
 
             let editOrDeleteMessageList = StreamsHandler.getEditOrDeleteMessageList()
             let sid = undefined
@@ -792,7 +884,7 @@ class IMHandler {
 
                 EvntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, messageData);
 
-                this.sendAck(IMConstants.PROTO_IM_SMS_ACK, element.smsgid, '')
+                this.sendAck(IMConstants.PROTO_IM_SMS_ACK, element.smsgid.Value, '')
             }
 
         } catch (e) {

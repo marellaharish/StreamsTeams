@@ -1,13 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { MDBAccordion, MDBAccordionItem, MDBBadge, MDBChip, MDBIcon, MDBInput, MDBPagination, MDBPaginationItem, MDBPaginationLink, MDBTabs, MDBTabsContent, MDBTabsItem, MDBTabsLink, MDBTabsPane } from 'mdb-react-ui-kit'
-import { contactsWithStatus, contactTeams, GlobalContactsData, OtherStreamsContactsData } from '../../config/Constants'
-import { Group, Iconsearch, Profile } from '../../assets/images'
-import EmitterConstants from '../../config/EmitterConstants'
-import EvntEmitter from '../../classes/utils/EvntEmitter'
-import SettingsHandler from "../../classes/settings/SettingsHandler"
+import { MDBChip, MDBIcon, MDBTabsPane } from 'mdb-react-ui-kit'
+import React, { useEffect, useRef, useState } from 'react'
+import { Iconsearch, Profile } from '../../assets/images'
 import MessageHandler from "../../classes/chat/MessageHandler"
-import Constants from "../../config/Constants"
 import ContactsHandler from "../../classes/contacts/ContactsHandler"
+import SettingsHandler from "../../classes/settings/SettingsHandler"
+import EvntEmitter from '../../classes/utils/EvntEmitter'
+import Constants from "../../config/Constants"
+import EmitterConstants from '../../config/EmitterConstants'
 
 let loadMoreStatus = false;
 let selectedTabIndex = Constants.REQ_CONTACTS_TAB_TYPE.COMPANY_CONTACTS;
@@ -308,7 +307,7 @@ const Contacts = ({ contacts_tab_selection }) => {
                             {username}  {extension}
                         </p>
                         <div className="d-flex align-items-center defaultFont">
-                            <div className={`rounded-circle me-2 `} />
+                            <div className={`rounded-circle`} />
                             {member.STATUS ? member.STATUS : 'Offline'}
                         </div>
                     </div>

@@ -3,19 +3,18 @@
  * Date: 27/08/24
  */
 
-import React, { useEffect } from "react";
-import { MDBContainer, MDBRow, MDBCol, MDBInput, MDBCheckbox, MDBBtn, MDBIcon } from 'mdb-react-ui-kit';
-import { useState } from "react";
-import { json, useNavigate } from "react-router-dom";
 import md5 from 'md5';
+import { MDBBtn, MDBCheckbox, MDBCol, MDBContainer, MDBIcon, MDBInput, MDBRow } from 'mdb-react-ui-kit';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { checkmark, Panterra, StreamsLogo } from '../../assets/images';
 
-import URLParams from "../../config/URLParams"
-import Params from "../../config/Params"
-import Config from "../../config/Config"
-import MessaageConstants from "../../config/MessaageConstants"
-import serverHandler from "../../classes/utils/ServerHandler"
+import serverHandler from "../../classes/utils/ServerHandler";
+import Config from "../../config/Config";
+import MessaageConstants from "../../config/MessaageConstants";
+import Params from "../../config/Params";
+import URLParams from "../../config/URLParams";
 
 function Login() {
 
@@ -385,9 +384,9 @@ function Login() {
 
                                         <div className="d-flex justify-content-between mb-4">
                                             <MDBCheckbox name="flexCheck" value="" id="flexCheckDefault" label="Remember me" />
-                                            <a href="#!" className="text-muted" style={{ textDecoration: 'none', color: '#8bc500' }}>Forgot?</a>
+                                            <a href="#!" className="text-muted" style={{ textDecoration: 'none', color: '#527f4a' }}>Forgot?</a>
                                         </div>
-                                        <MDBBtn style={{ backgroundColor: '#8bc500', color: 'white' }} className='shadow-2 py-3 fs-6' block>
+                                        <MDBBtn style={{ backgroundColor: '#527f4a', color: 'white' }} className='shadow-2 py-3 fs-6' block>
                                             Log In
                                         </MDBBtn>
 
@@ -400,7 +399,7 @@ function Login() {
                                         }
 
                                         <p className="mt-4">
-                                            <a href="#!" style={{ textDecoration: 'none', color: '#8bc500' }}>Use Single Sign On</a>
+                                            <a href="#!" style={{ textDecoration: 'none', color: '#527f4a' }}>Use Single Sign On</a>
                                         </p>
                                     </div>
                                 </center>
@@ -410,7 +409,7 @@ function Login() {
 
                         <MDBCol md="6" className="text-left p-4 mob-d-none  ">
                             <div className="bg-light p-5 shadow-4 rounded-5 w-100 h-100 p-mob-0">
-                                <h4 className="mb-3"><strong>Introducing Streams, the revolutionary new way for Businesses to Communicate, Collaborate & Share Information</strong></h4>
+                                <h4 className="mb-3"><strong style={{ color: '#527f4a' }}>Introducing Streams, the revolutionary new way for Businesses to Communicate, Collaborate & Share Information</strong></h4>
                                 <ul className="pl-3 loginInstructions mt-5" style={{ listStyleType: 'none', paddingLeft: '20px' }}>
                                     {MessaageConstants.STREAMS_FEATURES.map((feature, index) => (
                                         <div className="d-flex align-items-start mb-4" key={index}>
@@ -421,7 +420,7 @@ function Login() {
                                 </ul>
                             </div>
                             <footer className="text-center mt-auto pt-4">
-                                <small>©2024 PanTerra Networks, Inc. All rights reserved. | <a href="#!" style={{ textDecoration: 'none', color: '#8bc500' }}>Privacy Policy</a></small>
+                                <small>©2024 PanTerra Networks, Inc. All rights reserved. | <a href="#!" style={{ textDecoration: 'none', color: '#527f4a' }}>Privacy Policy</a></small>
                             </footer>
                         </MDBCol>
                     </MDBRow >

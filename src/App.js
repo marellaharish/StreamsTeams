@@ -11,7 +11,6 @@ import AuthCode from './views/login/AuthCode';
 import DIDComponent from './components/sms/DIDComponent';
 import ChatsView from './components/chats/Chats';
 import DarkMode from './components/utils/DarkMode';
-import UsersComponent from './components/sms/UsersComponent';
 
 function App() {
   return (

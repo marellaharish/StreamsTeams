@@ -1,35 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Comment, Copy, Delete, Emoji, Forward, Edit, Reply, Profile, Send, Upload, TimerIcon } from '../../assets/images';
-import { MDBDropdown, MDBDropdownItem, MDBDropdownMenu, MDBDropdownToggle, MDBIcon, MDBInput, MDBModal, MDBModalBody, MDBModalContent, MDBModalDialog, MDBModalFooter, MDBModalHeader, MDBModalTitle } from 'mdb-react-ui-kit';
-import {
-    MDBCard,
-    MDBCardHeader,
-    MDBCardBody,
-    MDBCardTitle,
-    MDBCardText,
-    MDBBtn
-} from 'mdb-react-ui-kit';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { isMobile } from 'react-device-detect';
-import { showToast } from '../../views/home/ToastView';
 import EmojiPicker from 'emoji-picker-react';
+import { MDBCard, MDBCardBody, MDBCardHeader, MDBDropdown, MDBDropdownItem, MDBDropdownMenu, MDBDropdownToggle, MDBIcon, MDBInput } from 'mdb-react-ui-kit';
+import React, { useEffect, useRef, useState } from 'react';
+import { isMobile } from 'react-device-detect';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Comment, Emoji, Profile, SendMessage, TimerIcon, Upload } from '../../assets/images';
 
-import evntEmitter from "../../classes/utils/EvntEmitter";
-import EmitterConstants from "../../config/EmitterConstants"
-import messageHandler from "../../classes/chat/MessageHandler"
-import StreamsHandler from "../../classes/chat/StreamsHandler"
-import Constants, { REQ_TYPE_SMS_ACTION } from "../../config/Constants"
-import MessaageConstants from "../../config/MessaageConstants"
-import Header from '../utils/Header';
-import IMConstants from '../../config/IMConstants';
-import Utils from '../../classes/utils/util';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import Attachments from './Attachments';
-import Params from '../../config/Params'
-import SettingsHandler from '../../classes/settings/SettingsHandler'
-import ChatComponents from './ChatComponent'
+import messageHandler from "../../classes/chat/MessageHandler";
+import StreamsHandler from "../../classes/chat/StreamsHandler";
+import SettingsHandler from '../../classes/settings/SettingsHandler';
+import evntEmitter from "../../classes/utils/EvntEmitter";
+import Utils from '../../classes/utils/util';
+import Constants, { REQ_TYPE_SMS_ACTION } from "../../config/Constants";
+import EmitterConstants from "../../config/EmitterConstants";
+import IMConstants from '../../config/IMConstants';
+import MessaageConstants from "../../config/MessaageConstants";
+import Header from '../utils/Header';
+import ChatComponents from './ChatComponent';
 
-let source_data_for_mobile;
 let group_code;
 let group_title
 let phnumber;
@@ -117,16 +105,16 @@ const ChatsView = ({ user_data }) => {
             if (!location.state) return;
             if (!isMobile) return;
 
-            console.log(TAG + '[useEffect].[location.state] ---- location.state ::' + JSON.stringify(location.state));
+            console.log(TAG + '[useEffect].[location.state] ---- state ::' + JSON.stringify(location.state));
 
             let final_data;
 
             if (location.state.member_data) {
 
                 final_data = location.state.member_data;
-            } else if (location.state) {
+            } else if (location.state.member) {
 
-                final_data = location.state;
+                final_data = location.state.member;
             }
 
             init(final_data);
@@ -236,8 +224,6 @@ const ChatsView = ({ user_data }) => {
             let messageslengthDiff = messagesList.length - previousMessagesListLength;
 
             if ((unread_count * 1) > 0) {
-
-                sendUnReadStatusToServer();
 
                 messageslengthDiff = messagesList.length - (unread_count * 1);
             }
@@ -381,11 +367,11 @@ const ChatsView = ({ user_data }) => {
 
         try {
 
-            console.log(TAG + "[sendUnReadStatusToServer] ================= unread_count :: " + unread_count);
+            console.log(TAG + "[sendUnReadStatusToServer] =================");
 
             if ((unread_count * 1) > 0) {
 
-                StreamsHandler.sendReadStatus(sid, group_code, phnumber)
+                //StreamsHandler.sendReadStatus(sid, group_code, phnumber)
             }
 
             unread_count = 0;
@@ -503,8 +489,6 @@ const ChatsView = ({ user_data }) => {
 
             setSMSBannerVisible(false);
 
-            source_data_for_mobile = user_data;
-
             if (user_data && user_data.isNavigatedSMSPopUp) {
 
                 smsDetails.to = user_data.to;
@@ -552,6 +536,11 @@ const ChatsView = ({ user_data }) => {
                 unread_count = (user_data.unread_count * 1);
             }
 
+            if (messages_list && messages_list.length > 0) {
+
+                sendUnReadStatusToServer();
+            }
+
             console.log(TAG + '[ChatView].init() ---- group_code :: ' + group_code + ' :: phnumber :: ' + phnumber + " :: sid :: " + sid);
 
             if (messages_list && messages_list.length > 0) {
@@ -582,14 +571,14 @@ const ChatsView = ({ user_data }) => {
 
         try {
 
-            console.log(TAG + "[handleBackClick] ------- group_code :: " + group_code + " :: source_data_for_mobile :: " + JSON.stringify(source_data_for_mobile));
+            console.log(TAG + "[handleBackClick] ------- group_code :: " + group_code);
 
             if (group_code) {
 
-                navigate("/didcomponent", { state: source_data_for_mobile });
+                navigate("/didcomponent", { state: group_code });
             } else {
 
-                navigate("/home", { state: source_data_for_mobile });
+                navigate("/home");
             }
 
         } catch (e) {
@@ -842,8 +831,8 @@ const ChatsView = ({ user_data }) => {
                 console.log("[prepareSMSDetailsFromLastMessage]  finalMessageData: " + JSON.stringify(messageData));
 
                 //1- means Outgoing, 0- means Incoming sms.
-                smsDetails.from = messageData.direction === Constants.REQ_TYPE_CHAT.WS_OUTGOING_MESSAGE ? finalMessageData.from : finalMessageData.to
-                smsDetails.to = messageData.direction === Constants.REQ_TYPE_CHAT.WS_OUTGOING_MESSAGE ? finalMessageData.to : finalMessageData.from
+                smsDetails.from = messageData.direction === Constants.REQ_TYPE_SMS_CHAT.WS_OUTGOING_SMS_MESSAGE ? finalMessageData.from : finalMessageData.to
+                smsDetails.to = messageData.direction === Constants.REQ_TYPE_SMS_CHAT.WS_OUTGOING_SMS_MESSAGE ? finalMessageData.to : finalMessageData.from
 
             }
 
@@ -1200,7 +1189,7 @@ const ChatsView = ({ user_data }) => {
             <div className="d-hide">
                 <Header />
             </div>
-            <MDBCard>
+            <MDBCard className="chatbg">
                 <MDBCardHeader>
                     <div className='d-flex align-items-center'>
                         {isMobile &&
@@ -1519,7 +1508,7 @@ const ChatsView = ({ user_data }) => {
                                 </div>
 
                                 <div className='iconContainer ms-1' onClick={onClickSend}>
-                                    <img src={Send} alt="" className='smsIcon' />
+                                    <img src={SendMessage} alt="" className='smsIcon' />
                                 </div>
                             </div>
                         </div>

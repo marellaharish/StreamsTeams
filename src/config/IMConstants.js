@@ -14,7 +14,7 @@ exports.IM_PROTO_PING = "<Message id=\"764\"/>";
 
 exports.IM_PROTO_ACK = "<Message smsgid=\"?\" id=\"?\" pid=\"?\" msgtype=\"?\"/>";
 
-exports.IM_PROTO_GROUP_CHAT_READ_PROTOCOL = "<Message id=\"?\"><sid>?</sid><readsmsgid>?</readsmsgid><cid>?</cid><phnum>?</phnum><msg>?</msg></Message>"
+exports.IM_PROTO_GROUP_CHAT_READ_PROTOCOL = "<Message id=\"?\" readsmsgid =\"?\"><sid>?</sid><cid>?</cid><phnum>?</phnum><msg>?</msg></Message>"
 
 exports.WS_IM_SMS = 50;
 exports.WS_IM_MMS = 51;

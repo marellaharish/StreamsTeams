@@ -40,10 +40,9 @@ class IMConnector {
             let URL = "wss://im1.beta-wspbx.com/wschat";//'wss://devim8.beta-wspbx.com/wschat' 
             let isIMConnected = this.isIMConnected()
 
-            if (isIMConnected == true) {
-
-                console.log('[connectToIM] IM ALREADY CONNECTED. isIMConnected: ' + isIMConnected);
-                return;
+            if (socket) {
+                console.log('[connectToIM] IM ALREADY CONNECTED , socket: ' + socket);
+                return
             }
 
             console.log("[connectToIM] -------------- URL :: " + URL + " :: isIMConnected : " + isIMConnected);
@@ -83,7 +82,7 @@ class IMConnector {
 
                 try {
 
-                    console.log("Message from server :: " + event.data);
+                    // console.log("Message from server :: " + event.data);
 
                     let message = Utils.convertXML_JSON(event)
                     if (message == null || !message) {
@@ -193,13 +192,7 @@ class IMConnector {
 
         try {
 
-            console.log("[startPingTimer] ================== timerID :: " + timerID);
-
-            if (timerID && timerID != null) {
-
-                clearInterval(timerID);
-                timerID = null;
-            }
+            console.log("[startPingTimer] ==================");
 
             timerID = setInterval(() => {
 

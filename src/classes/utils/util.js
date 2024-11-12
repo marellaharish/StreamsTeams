@@ -3,7 +3,6 @@ import knockSound from '../../assets/notification_sounds/knock.mp3'
 import { format } from 'date-fns';
 import CryptoJS from 'crypto-js';
 
-
 import IMConstants from '../../config/IMConstants';
 import buzzSound from '../../assets/notification_sounds/buzz.mp3'
 import chimedwnSound from '../../assets/notification_sounds/chimedwn.mp3'
@@ -14,7 +13,7 @@ import Params from '../../config/Params';
 import Config from '../../config/Config';
 import URLParams from '../../config/URLParams';
 
-const { XMLParser } = require('fast-xml-parser');
+var convert = require('xml-js');
 
 var TAG = "[Utils].";
 class Utils {
@@ -49,13 +48,14 @@ class Utils {
 
         try {
 
-            const parser = new XMLParser({
+            var message = convert.xml2json(data.data,
+                {
+                    compact: true, ignoreComment: true, ignoreAttributes: false, trim: true, nativeType: true,
+                    attributesKey: 'ParamsId', textKey: 'Value', cdataKey: 'Value'
+                });
 
-                ignoreAttributes: false, // To include attributes in the JSON output
-                attributeNamePrefix: "", // Prefix for attributes to distinguish them from tags
-            });
+            return JSON.parse(message);
 
-            return parser.parse(data.data);
 
         } catch (e) {
 

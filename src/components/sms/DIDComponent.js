@@ -65,7 +65,7 @@ const DIDComponent = ({ onClickSMSDID, groupData }) => {
 
         try {
 
-            console.log(TAG + "[useEffect] in group_data --------------- ");
+            console.log(TAG + "[useEffect] in group_data ---------------");
 
             groupData = groupData;
 
@@ -87,12 +87,12 @@ const DIDComponent = ({ onClickSMSDID, groupData }) => {
 
             if (!isMobile) return;
 
-            console.log(TAG + "[useEffect].[location.state] isMobile :: " + isMobile + " :: location :: " + JSON.stringify(location) + " :: state :: " + JSON.stringify(location.state));
+            console.log(TAG + "[useEffect].[location.state] isMobile :: " + isMobile + " :: location :: " + JSON.stringify(location));
 
-            if (location.state && location.state.message) {
+            if (location.state.member && location.state.member.message) {
 
-                groupData = location.state;
-                group_code = JSON.parse(location.state.message).group_code;
+                groupData = location.state.member;
+                group_code = JSON.parse(location.state.member.message).group_code;
             }
 
             initGroupData();
@@ -188,7 +188,7 @@ const DIDComponent = ({ onClickSMSDID, groupData }) => {
                 setIsLoading(false);
                 setGroupDIDsList(groupDIDList);
 
-                if ((!phnumber || phnumber == null) && groupDIDList[0].phnumber) {//If we select Group, as there are no messages showing in Groups we cannot send 'phnumber', so select the 1st DID.
+                if (groupDIDList[0].phnumber) {//If we select Group, as there are no messages showing in Groups we cannot send 'phnumber', so select the 1st DID.
 
                     phnumber = groupDIDList[0].phnumber;
                 }
@@ -196,7 +196,7 @@ const DIDComponent = ({ onClickSMSDID, groupData }) => {
                 let message_obj = groupDIDList.find(object => object.phnumber == phnumber)
                 console.log(TAG + '[loadGroupSMSDIDs] message_obj :: ' + JSON.stringify(message_obj));
 
-                if (!isMobile && message_obj) {
+                if (!isMobile) {
 
                     onClickSpecificSMSDID(message_obj);
                 }
@@ -374,7 +374,7 @@ const DIDComponent = ({ onClickSMSDID, groupData }) => {
 
         try {
 
-            console.log('[onClickSpecificSMSDID] ---- Member details :: ' + JSON.stringify(member_data) + ' :: isMobile :: ' + isMobile);
+            console.log('[onClickSpecificSMSDID] ---- Member details :: ' + JSON.stringify(member_data));
 
             setSelectedDID(member_data.phnumber);//This is to Select the Specific DID in the DID Component.
 

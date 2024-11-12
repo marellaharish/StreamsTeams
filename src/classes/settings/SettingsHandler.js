@@ -438,8 +438,8 @@ class SettingsHandler {
                 search_key: searchString,
                 agentid: localStorage.getItem(Params.WS_LOGIN_USER),
                 archiveid: localStorage.getItem(Params.WS_IM_ARCHIVEID),
-                initialLimit: (type === Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD) ? "" : MessageHandler.getSMSData(type).length,
-                secondLimit: (type === Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD) ? "" : Config.LOAD_MORE_DATA_LIMIT,
+                initialLimit: MessageHandler.getSMSData(type).length,
+                secondLimit: Config.LOAD_MORE_DATA_LIMIT,
                 type: type
             };
 
@@ -453,7 +453,7 @@ class SettingsHandler {
             ServerHandler.sendServerRequest(URLParams.REQ_SMS_GROUPS, {}, params, URLParams.REQ_GET, extra_data)
                 .then((data, extra_data) => {
 
-                    //console.log('[loadSMSData] response_data :: ' + JSON.stringify(data.response_data) + " :: extra_data :: " + JSON.stringify(data.extra_data));
+                    console.log('[loadSMSData] response_data :: ' + JSON.stringify(data.response_data) + " :: extra_data :: " + JSON.stringify(data.extra_data));
                     self.onReceiveResponse(data.response_data, data.extra_data);
 
                 })
@@ -492,22 +492,20 @@ class SettingsHandler {
 
             response_data.map((data, index) => {
 
-                if (extra_data.req_type === Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD) {
+                if ((data.message && JSON.parse(data.message).group_code) || data.code) {
 
-                    if ((data.message && JSON.parse(data.message).group_code) || data.code) {
+                    //allUnreadCount = (allUnreadCount === -1 ? (allUnreadCount + 1) : allUnreadCount)
 
-                        //allUnreadCount = (allUnreadCount === -1 ? (allUnreadCount + 1) : allUnreadCount)
+                    allUnreadCount = allUnreadCount + (data.unread_count * 1);
 
-                        allUnreadCount = allUnreadCount + (data.unread_count * 1);
+                } else if (!JSON.parse(data.message).group_code && JSON.parse(data.message).to) {
 
-                    } else if (!JSON.parse(data.message).group_code && JSON.parse(data.message).to) {
-
-                        //individualUnreadCount = (individualUnreadCount === -1 ? (individualUnreadCount + 1) : individualUnreadCount)
-                        individualUnreadCount = individualUnreadCount + (data.unread_count * 1);
-                    }
+                    //individualUnreadCount = (individualUnreadCount === -1 ? (individualUnreadCount + 1) : individualUnreadCount)
+                    individualUnreadCount = individualUnreadCount + (data.unread_count * 1);
                 }
 
-                //console.log('[onReceiveSMSData] index --- ' + index + " :: data :: " + JSON.stringify(data) + " :: type :: " + extra_data.req_type +", allUnreadCount ::" + allUnreadCount + " :: individualUnreadCount :: " + individualUnreadCount);
+                console.log('[onReceiveSMSData] index --- ' + index + " :: data :: " + JSON.stringify(data) + " :: type :: " + extra_data.req_type +
+                    ", allUnreadCount ::" + allUnreadCount + " :: individualUnreadCount :: " + individualUnreadCount);
 
                 MessageHandler.addSMSData(data, (extra_data.req_type * 1));
             });
@@ -530,7 +528,6 @@ class SettingsHandler {
             let first_limit = MessageHandler.getSMSGroupDIDs(group_code).length;
             if (!is_load_more) {
 
-                //We went to another group and re-visited the same group. In this case we have DID's in the array so don't send the server req again.
                 if (first_limit > Config.LOAD_MORE_DATA_LIMIT) {
 
                     console.log(TAG + "[loadSMSMGroupDIDs] ENOUGH DATA AVAILABLE IN MEMORY. SO DON't SEND SERER REQUEST ==============");
@@ -690,7 +687,7 @@ class SettingsHandler {
             ServerHandler.sendServerRequest(URLParams.REQ_SMS_DIDS_MESSAGES, {}, params, URLParams.REQ_GET, extra_data)
                 .then((data, extra_data) => {
 
-                    //console.log('[loadSMSMessages] response_data :: ' + JSON.stringify(data.response_data) + " :: extra_data :: " + JSON.stringify(data.extra_data));
+                    console.log('[loadSMSMessages] response_data :: ' + JSON.stringify(data.response_data) + " :: extra_data :: " + JSON.stringify(data.extra_data));
                     self.onReceiveResponse(data.response_data, data.extra_data);
 
                 })
@@ -776,7 +773,7 @@ class SettingsHandler {
                 MessageHandler.addSMSMessage(sms_id, data, extra_data.is_load_more_data_req);
             });
 
-            //console.log('[onReceiveSMSMessages] Existing messages -after-- ' + JSON.stringify(MessageHandler.getSMSMessages(sms_id)));
+            console.log('[onReceiveSMSMessages] Existing messages -after-- ' + JSON.stringify(MessageHandler.getSMSMessages(sms_id)));
 
             evntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, {});
 
@@ -945,7 +942,7 @@ class SettingsHandler {
             ServerHandler.sendServerRequest(URLParams.REQ_LOAD_CONTACTS, {}, params, URLParams.REQ_GET, extra_data)
                 .then((data, extra_data) => {
 
-                    // console.log(TAG + '[loadContacts] response_data :: ' + JSON.stringify(data.response_data) + " :: extra_data :: " + JSON.stringify(data.extra_data));
+                    console.log(TAG + '[loadContacts] response_data :: ' + JSON.stringify(data.response_data) + " :: extra_data :: " + JSON.stringify(data.extra_data));
                     self.onReceiveResponse(data.response_data, data.extra_data);
 
                 })

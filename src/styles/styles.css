@@ -14,10 +14,11 @@ body {
 
 :root {
     --primary-100: #14a44d;
-    --primary-200: #53c677;
-    --primary-300: #a9e4bb;
+    --primary-200: #6ec78b;
+    --primary-300: #d3edd9;
+
     --accent-100: #12873f;
-    --accent-200: #dff6e8;
+    --accent-200: #e3f5eb;
     --text-100: #000000;
     --text-200: #6b6b6b;
     --bg-100: #FFFFFF;
@@ -36,10 +37,10 @@ body {
     --card-border-dark-color: rgb(95, 99, 104);
     --card-background-dark-color: #ffffff;
     --tabs-Text: #202124;
-    --active-card-background-color: #a3d89a;
-    --world-section-active-bg-color: #004a77;
-
+    --active-card-background-color: #527f4a;
+    --world-section-active-bg-color: #007706;
     --world-section-hover-bg-color: #f6f8fc;
+    --world-section-hover-bg-color: #edf0f3;
     --list-item-hover-bg-color: #e2ecf4;
     --primary-text-color: var(--gm3-color-on-surface);
     --secondary-text-color: var(--gm3-color-outline);
@@ -51,6 +52,7 @@ body {
     /* Medium grey for thumb */
     --scrollbar-thumb-hover: #555555;
     /* Darker grey on hover */
+    --chipbg: #dadada !important;
 
 
 }
@@ -83,6 +85,7 @@ body {
     /* Medium grey for thumb */
     --scrollbar-thumb-hover: #888888;
     /* Lighter grey on hover */
+    --chipbg: #37393b !important;
 
     .headerLogo {
         width: 190px;
@@ -187,6 +190,16 @@ body {
         background-color: var(--active-card-background-color) !important;
         color: #FFFFFF !important;
     }
+
+    .userSearch~div .chip.active {
+        background-color: var(--active-card-background-color) !important;
+        color: #fff !important;
+    }
+
+    .react-loading-skeleton {
+        --base-color: #505050 !important;
+        --highlight-color: #404040 !important;
+    }
 }
 
 
@@ -213,8 +226,16 @@ body {
 
 }
 
+.card.chatbg .card-header,
+.card.chatbg .date-display,
+.card.chatbg .card-footer,
+.card.chatbg .card-body {
+    background-color: #f3f5f7 !important;
+}
+
 .loginInstructions img {
-    filter: invert(1);
+    filter: invert(0.5);
+    margin-top: 5px;
 }
 
 .form-label {
@@ -632,9 +653,14 @@ button {
     color: var(--mdb-secondary) !important;
 }
 
+.didBuddy.activeItem .dateTextNew,
+.didBuddy.activeItem .dateTextNew:hover,
+.didBuddy.activeItem .ellipsis,
+.didBuddy.activeItem .ChatUserName,
 .didBuddy:hover .dateTextNew,
+.didBuddy:hover .ChatUserName,
 .didBuddy:hover .ellipsis {
-    color: var(--dateText) !important;
+    color: #fff !important;
 }
 
 .groupDID-view-container {
@@ -970,6 +996,11 @@ li.nav-item {
 .nav-item .active i,
 .nav-item .active p {
     color: var(--tabs-Text) !important;
+    color: #fff !important;
+}
+
+.nav-tabs .nav-link.active img {
+    filter: brightness(10) !important;
 }
 
 .nav-link {
@@ -1052,6 +1083,15 @@ hr {
 .date-display,
 .chip {
     color: var(--secondary-text) !important;
+}
+
+.userSearch~div .chip {
+    background-color: var(--chipbg) !important;
+}
+
+.userSearch~div .chip.active {
+    background-color: var(--active-card-background-color) !important;
+    color: #fff !important;
 }
 
 .defaultFont {
@@ -1485,4 +1525,8 @@ hr {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+#flexCheckDefault~label.form-check-label {
+    color: #757575 !important;
 }

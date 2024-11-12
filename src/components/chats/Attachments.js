@@ -53,6 +53,7 @@ const Attachments = ({ element }) => {
                 setImages(updatedImages);
             }
 
+
         } catch (error) {
             console.error("[handleProgressBarForUpload] Error: ", error);
         }
@@ -70,7 +71,8 @@ const Attachments = ({ element }) => {
         const overlayText = isLastImageWithOverlay ? `+${extraImagesCount}` : ''
         const isUploadPregress = (isUploadLink && image.isUploading) ? true : false
 
-        //console.log(TAG + '[renderImage]  index: ' + index + ', name: ' + image.filename + ', isUploadPregress: ' + isUploadPregress + ", loading: " + loading + ', uploading : ' + image.isUploading);
+        console.log(TAG + '[renderImage]  index: ' + index + ', name: ' + image.filename +
+            ', isUploadPregress: ' + isUploadPregress + ", loading: " + loading + ', uploading : ' + image.isUploading);
 
         return (
             <div className={`image-wrapper ${(isUploadPregress || isLastImageWithOverlay) || (loading && !isUploadLink) ? 'masked-image' : ''}`} key={image.cid}>

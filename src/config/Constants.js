@@ -51,8 +51,14 @@ exports.REQ_CONTACTS_TAB_TYPE = Object.freeze({
 
 exports.REQ_TYPE_CHAT = Object.freeze({
 
-    WS_OUTGOING_MESSAGE: 1,
-    WS_INCOMING_MESSAGE: 2,
+    WS_OUTGOING_CHAT_MESSAGE: 0,
+    WS_INCOMING_CHAT_MESSAGE: 1,
+});
+
+exports.REQ_TYPE_SMS_CHAT = Object.freeze({
+
+    WS_OUTGOING_SMS_MESSAGE: 1,
+    WS_INCOMING_SMS_MESSAGE: 2,
 });
 
 exports.API_HANDLER = Object.freeze({
