@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30" height="30" viewBox="0 0 30 30">
+  <defs>
+    <clipPath id="clip-Chat-More">
+      <rect width="30" height="30"/>
+    </clipPath>
+  </defs>
+  <g id="Chat-More" clip-path="url(#clip-Chat-More)">
+    <g id="More_Icon_Vertical" data-name="More Icon Vertical" transform="translate(-155.559 -594.585)">
+      <path id="_1" data-name="1" d="M170.831,598.585a2.246,2.246,0,1,0,2.242,2.249A2.246,2.246,0,0,0,170.831,598.585Z" fill="#2389d0"/>
+      <path id="_2" data-name="2" d="M170.82,607.285a2.246,2.246,0,1,0,2.242,2.249A2.246,2.246,0,0,0,170.82,607.285Z" fill="#2389d0"/>
+      <path id="_3" data-name="3" d="M170.808,615.985a2.246,2.246,0,1,0,2.242,2.249A2.246,2.246,0,0,0,170.808,615.985Z" fill="#2389d0"/>
+    </g>
+  </g>
+</svg>
