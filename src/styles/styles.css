@@ -222,7 +222,7 @@ body {
 }
 
 body {
-    background-color: var(--world-section-hover-bg-color) !important;
+    /* background-color: var(--world-section-hover-bg-color) !important; */
     color: var(--text) !important;
 }
 
@@ -293,7 +293,7 @@ p {
 
 .users-view-container {
     /* padding: 10px; */
-    height: calc(100vh - 265px);
+    height: calc(100vh - 220px);
     overflow-y: auto;
     width: auto;
     overflow-x: hidden;
@@ -633,13 +633,14 @@ button {
 }
 
 .didBuddy:hover .dateTextNew,
+.didBuddy.activeItem .ellipsis,
 .didBuddy:hover .ellipsis {
     color: var(--dateText) !important;
 }
 
 .groupDID-view-container {
     padding: 10px;
-    height: calc(100vh - 163px);
+    height: calc(100vh - 123px);
     overflow-y: auto;
     scrollbar-width: none;
 }
@@ -851,7 +852,7 @@ nav .dropdown-toggle::after,
 
 .defaultchat-view-container {
     padding: 10px;
-    height: calc(100vh - 100px);
+    height: calc(100vh - 68px);
     overflow-y: auto;
     width: auto;
     overflow-x: hidden;
@@ -1186,7 +1187,7 @@ hr {
 
 .userNameMain {
     font-family: Google Sans, Google Sans, Roboto, Arial, sans-serif;
-    line-height: 2rem;
+    line-height: 1.8rem;
     font-size: 1.5rem;
     letter-spacing: 0;
     font-weight: 400;
@@ -1485,4 +1486,72 @@ hr {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.searchReasultText {
+    display: block;
+    color: var(--dateText) !important;
+    font-size: 14px !important;
+}
+
+.mainTabs {
+    color: #0000008c;
+    /* background-color: #eeeeee; */
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+.mainTabs.active {
+    color: #2f5aa2;
+    background-color: #e2eaf7;
+}
+
+.hOLPxV {
+    display: flex;
+    flex-direction: row;
+    -webkit-box-flex: 10000;
+    flex-grow: 10000;
+    flex-shrink: 1;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    justify-content: center;
+    height: 60px;
+    padding: 0px;
+    overflow: hidden;
+    gap: 4px;
+    position: relative;
+    z-index: 99;
+}
+
+.RcDrawer-paper {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    -webkit-box-align: center;
+    align-items: center;
+    padding: 0px;
+    width: 100%;
+    box-sizing: border-box;
+    background: rgb(255, 255, 255);
+    border-bottom: 1px solid rgb(229, 229, 229);
+}
+
+.kycUAM {
+    display: flex;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: end;
+    justify-content: flex-end;
+    -webkit-box-flex: 1;
+    flex-grow: 1;
+    flex-shrink: 10000;
+    padding-right: 8px;
+    box-sizing: border-box;
+}
+
+.exampleTooltip {
+    border-radius: 8px !important;
 }

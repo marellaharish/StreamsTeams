@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { MDBCol, MDBContainer, MDBRow } from 'mdb-react-ui-kit'
+import { MDBCol, MDBContainer, MDBIcon, MDBRow } from 'mdb-react-ui-kit'
 import { isIOS, isAndroid, isMobile } from 'react-device-detect';
 import { useLocation } from 'react-router-dom';
+import { Tooltip } from "react-tooltip";
 
 
 import ChatsView from '../../components/chats/Chats'
@@ -16,6 +17,7 @@ import DIDComponent from '../../components/sms/DIDComponent';
 import Welcome from './Welcome';
 import Params from '../../config/Params'
 import Utils from '../../classes/utils/util';
+import SearchReasult from '../../components/home/SearchReasult';
 
 let TAG = "[Home.js].";
 
@@ -32,7 +34,6 @@ const HomePage = () => {
   const [selectedUserStatus, setSelectedUserStatus] = useState(false);
   const [groupselectstatus, setGroupSelectStatus] = useState(false);
   const [didselectstatus, setDIDSelectStatus] = useState(false);
-
   const [componentsLoaded, setComponentsLoaded] = useState({
     header: false,
     users: false,
@@ -309,8 +310,56 @@ const HomePage = () => {
 
   return (
     <>
+      {/* <Header onLoad={() => handleComponentLoad('header')} /> */}
+      <div className="RcDrawer-paper">
 
-      <Header onLoad={() => handleComponentLoad('header')} />
+        <div className='hOLPxV shadow-2 shadow-end-0'>
+          <div className='d-flex align-items-center mainTabs active sms'>
+            <i class="fas fa-comments fa-lg"></i>
+            <div>
+              <span className='ms-2'>SMS</span>
+            </div>
+          </div>
+
+
+          <div className='d-flex align-items-center mainTabs'>
+            <i class="far fa-address-book  fa-lg"></i>
+            <div>
+              <span className='ms-2'>Contacts</span>
+            </div>
+          </div>
+
+          <div className='d-flex align-items-center mainTabs'>
+            <i class="fas fa-fax fa-lg"></i>
+            <div>
+              <span className='ms-2'>Fax</span>
+            </div>
+          </div>
+
+          <div className='d-flex align-items-center mainTabs'>
+            <i class="fas fa-phone fa-lg"></i>
+            <div>
+              <span className='ms-2'>Phone</span>
+            </div>
+          </div>
+
+          <div className='d-flex align-items-center mainTabs'>
+            <i class="fas fa-ellipsis fa-lg"></i>
+            <div>
+              <span className='ms-2'>More</span>
+            </div>
+          </div>
+        </div>
+
+        <div className='kycUAM'>
+          <div className="mx-3 cursor-pointer">
+            <i class="fas fa-plus fa-lg"></i>
+          </div>
+          <div className="me-2 cursor-pointer">
+            <i class="fas fa-gear fa-lg"></i>
+          </div>
+        </div>
+      </div>
       <MDBContainer fluid>
         <MDBRow>
 
@@ -343,20 +392,25 @@ const HomePage = () => {
                           {groupselectstatus == true ? (
 
                             <>
+                              <div className="d-flex">
 
-                              <div className='w-380px'>
-                                <DIDComponent onClickSMSDID={onClickSMSDID} groupData={smsgroupdata} />
-                              </div>
+                                <div className='w-380px'>
+                                  <DIDComponent onClickSMSDID={onClickSMSDID} groupData={smsgroupdata} />
+                                </div>
 
-                              <div className="w-100">
-                                {
-                                  didselectstatus || (selectedContact != null && selectedContact.length > 0) ?
+                                <div className="w-100">
+                                  {
+                                    didselectstatus || (selectedContact != null && selectedContact.length > 0) ?
 
-                                    <ChatsView user_data={userData} />
-                                    :
-                                    <Welcome />
-                                }
+                                      <ChatsView user_data={userData} />
+                                      :
+                                      <Welcome />
+                                  }
 
+                                </div>
+                                <div className={`${groupselectstatus == false ? 'd-none' : 'w-360px'} `}>
+                                  <SearchReasult />
+                                </div>
                               </div>
                             </>
 
@@ -368,8 +422,16 @@ const HomePage = () => {
                               <div className="w-100">
                                 {
                                   didselectstatus || (selectedContact != null && selectedContact.length > 0) ?
-
-                                    <ChatsView user_data={userData} />
+                                    <>
+                                      <div className="d-flex">
+                                        <div className="w-100">
+                                          <ChatsView user_data={userData} />
+                                        </div>
+                                        <div className={`${!groupselectstatus == false ? 'd-none' : 'w-360px'} `}>
+                                          <SearchReasult />
+                                        </div>
+                                      </div>
+                                    </>
                                     :
                                     <Welcome />
                                 }
@@ -394,6 +456,14 @@ const HomePage = () => {
         </MDBRow>
 
       </MDBContainer>
+
+
+      <Tooltip anchorSelect=".sms" place="top" className="exampleTooltip">
+        All <br />
+        Individual <br />
+        Group <br />
+        Unread <br />
+      </Tooltip>
     </>
   )
 }

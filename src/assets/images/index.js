@@ -33,6 +33,17 @@ import Forward from "./Forward.svg"
 import Delete from "./Delete.svg"
 import Copy from "./Copy.svg"
 
+import NodeSvg from "./node-svgrepo-com.svg";
+import HtmlSvg from "./html-svgrepo-com.svg";
+import ExcelSvg from "./excel-svgrepo-com.svg";
+import VideoSquareSvg from "./video-square-svgrepo-com.svg";
+import WordSvg from "./word-svgrepo-com.svg";
+import AudioSquareSvg from "./audio-square-svgrepo-com.svg";
+import ZipDocumentSvg from "./zip-document-svgrepo-com.svg";
+import ImgBoxSvg from "./img-box-svgrepo-com.svg";
+import PdfSvg from "./pdf-svgrepo-com.svg";
+
+
 
 
 export {
@@ -68,5 +79,14 @@ export {
     dialpad,
     Enter,
     CreateTeam,
-    shareFiles
+    shareFiles,
+    NodeSvg,
+    HtmlSvg,
+    ExcelSvg,
+    VideoSquareSvg,
+    WordSvg,
+    AudioSquareSvg,
+    ZipDocumentSvg,
+    ImgBoxSvg,
+    PdfSvg,
 }
