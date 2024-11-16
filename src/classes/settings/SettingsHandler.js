@@ -1,11 +1,11 @@
-import URLParams from "../../config/URLParams"
-import ServerHandler from "../utils/ServerHandler"
-import Constants from "../../config/Constants"
 import Config from "../../config/Config"
-import MessageHandler from "../chat/MessageHandler"
-import Params from "../../config/Params"
+import Constants from "../../config/Constants"
 import EmitterConstants from '../../config/EmitterConstants'
+import Params from "../../config/Params"
+import URLParams from "../../config/URLParams"
+import MessageHandler from "../chat/MessageHandler"
 import evntEmitter from "../utils/EvntEmitter"
+import ServerHandler from "../utils/ServerHandler"
 
 let TAG = "[SettingsHanlder]."
 class SettingsHandler {
@@ -1048,6 +1048,9 @@ class SettingsHandler {
                 case Constants.REQ_TYPE.IMPORTED_CONTACTS:
 
                     self.onReceiveContacts(response_data, extra_data);
+                    break;
+
+                default:
                     break;
 
             }

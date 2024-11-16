@@ -1,33 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Comment, Copy, Delete, Emoji, Forward, Edit, Reply, Profile, Send, Upload, TimerIcon } from '../../assets/images';
-import { MDBDropdown, MDBDropdownItem, MDBDropdownMenu, MDBDropdownToggle, MDBIcon, MDBInput, MDBModal, MDBModalBody, MDBModalContent, MDBModalDialog, MDBModalFooter, MDBModalHeader, MDBModalTitle } from 'mdb-react-ui-kit';
-import {
-    MDBCard,
-    MDBCardHeader,
-    MDBCardBody,
-    MDBCardTitle,
-    MDBCardText,
-    MDBBtn
-} from 'mdb-react-ui-kit';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { isMobile } from 'react-device-detect';
-import { showToast } from '../../views/home/ToastView';
 import EmojiPicker from 'emoji-picker-react';
+import { MDBCard, MDBCardBody, MDBCardHeader, MDBDropdown, MDBDropdownItem, MDBDropdownMenu, MDBDropdownToggle, MDBIcon, MDBInput } from 'mdb-react-ui-kit';
+import React, { useEffect, useRef, useState } from 'react';
+import { isMobile } from 'react-device-detect';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Comment, Emoji, Profile, SendSMS, TimerIcon, Upload } from '../../assets/images';
 
-import evntEmitter from "../../classes/utils/EvntEmitter";
-import EmitterConstants from "../../config/EmitterConstants"
-import messageHandler from "../../classes/chat/MessageHandler"
-import StreamsHandler from "../../classes/chat/StreamsHandler"
-import Constants, { REQ_TYPE_SMS_ACTION } from "../../config/Constants"
-import MessaageConstants from "../../config/MessaageConstants"
-import Header from '../utils/Header';
-import IMConstants from '../../config/IMConstants';
-import Utils from '../../classes/utils/util';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import Attachments from './Attachments';
-import Params from '../../config/Params'
-import SettingsHandler from '../../classes/settings/SettingsHandler'
-import ChatComponents from './ChatComponent'
+import messageHandler from "../../classes/chat/MessageHandler";
+import StreamsHandler from "../../classes/chat/StreamsHandler";
+import SettingsHandler from '../../classes/settings/SettingsHandler';
+import evntEmitter from "../../classes/utils/EvntEmitter";
+import Utils from '../../classes/utils/util';
+import Constants, { REQ_TYPE_SMS_ACTION } from "../../config/Constants";
+import EmitterConstants from "../../config/EmitterConstants";
+import IMConstants from '../../config/IMConstants';
+import MessaageConstants from "../../config/MessaageConstants";
+import Header from '../utils/Header';
+import ChatComponents from './ChatComponent';
 
 let source_data_for_mobile;
 let group_code;
@@ -1519,7 +1508,7 @@ const ChatsView = ({ user_data }) => {
                                 </div>
 
                                 <div className='iconContainer ms-1' onClick={onClickSend}>
-                                    <img src={Send} alt="" className='smsIcon' />
+                                    <img src={SendSMS} alt="" className='smsIcon' />
                                 </div>
                             </div>
                         </div>
