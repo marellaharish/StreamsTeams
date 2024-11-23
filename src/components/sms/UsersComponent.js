@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { MDBAccordion, MDBAccordionItem, MDBBadge, MDBChip, MDBIcon, MDBInput, MDBTabs, MDBTabsContent, MDBTabsItem, MDBTabsLink, MDBTabsPane } from 'mdb-react-ui-kit'
+import { MDBAccordion, MDBAccordionItem, MDBBadge, MDBCard, MDBCardHeader, MDBChip, MDBIcon, MDBInput, MDBTabs, MDBTabsContent, MDBTabsItem, MDBTabsLink, MDBTabsPane } from 'mdb-react-ui-kit'
 import { dialpad, Group, Iconsearch, Profile, Settings } from '../../assets/images'
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
@@ -644,61 +644,68 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
     return (
         <>
             <div className='w-100'>
-                {/* 
-                <MDBTabs justify >
-                    <MDBTabsItem>
-                        <MDBTabsLink onClick={() => handleMainTabSelect('sms')} active={selectMainTab === 'sms'} className='d-flex align-items-center flex-column'>
-                            <i class="fas fa-comments fa-2x"></i>
-                            <p className="pt-2 tabsText d-block">
-                                SMS
-                            </p>
-                        </MDBTabsLink>
-                    </MDBTabsItem>
-                    <MDBTabsItem>
-                        <MDBTabsLink onClick={() => handleMainTabSelect('Contacts')} active={selectMainTab === 'Contacts'} className='d-flex align-items-center flex-column'>
-                            <i class="far fa-address-book fa-2x"></i>
-                            <p className='pt-2 d-block tabsText'>
-                                Contacts
-                            </p>
-                        </MDBTabsLink>
-                    </MDBTabsItem>
-                    <MDBTabsItem>
-                        <MDBTabsLink onClick={() => handleMainTabSelect('dialpad')} active={selectMainTab === 'dialpad'} className='d-flex align-items-center flex-column'>
-                            <img src={dialpad} width={25} />
-                            <p className='pt-2 d-block tabsText'>
-                                Dialpad
-                            </p>
-                        </MDBTabsLink>
-                    </MDBTabsItem>
-                    {isMobile &&
-                        <MDBTabsItem>
-                            <MDBTabsLink onClick={() => handleMainTabSelect('more')} active={selectMainTab === 'more'} className='d-flex align-items-center flex-column'>
-                                <i class="fas fa-ellipsis fa-2x"></i>
-                                <p className='pt-2 d-block tabsText'>
-                                    More
-                                </p>
-                            </MDBTabsLink>
-                        </MDBTabsItem>
-                    }
-                </MDBTabs> */}
+                {isMobile && (
+                    <>
 
 
+                        <MDBTabs justify >
+                            <MDBTabsItem>
+                                <MDBTabsLink onClick={() => handleMainTabSelect('sms')} active={selectMainTab === 'sms'} className='d-flex align-items-center flex-column'>
+                                    <i class="fas fa-comments fa-2x"></i>
+                                    <p className="pt-2 tabsText d-block">
+                                        SMS
+                                    </p>
+                                </MDBTabsLink>
+                            </MDBTabsItem>
+                            <MDBTabsItem>
+                                <MDBTabsLink onClick={() => handleMainTabSelect('Contacts')} active={selectMainTab === 'Contacts'} className='d-flex align-items-center flex-column'>
+                                    <i class="far fa-address-book fa-2x"></i>
+                                    <p className='pt-2 d-block tabsText'>
+                                        Contacts
+                                    </p>
+                                </MDBTabsLink>
+                            </MDBTabsItem>
+                            <MDBTabsItem>
+                                <MDBTabsLink onClick={() => handleMainTabSelect('dialpad')} active={selectMainTab === 'dialpad'} className='d-flex align-items-center flex-column'>
+                                    <img src={dialpad} width={25} />
+                                    <p className='pt-2 d-block tabsText'>
+                                        Dialpad
+                                    </p>
+                                </MDBTabsLink>
+                            </MDBTabsItem>
+                            {isMobile &&
+                                <MDBTabsItem>
+                                    <MDBTabsLink onClick={() => handleMainTabSelect('more')} active={selectMainTab === 'more'} className='d-flex align-items-center flex-column'>
+                                        <i class="fas fa-ellipsis fa-2x"></i>
+                                        <p className='pt-2 d-block tabsText'>
+                                            More
+                                        </p>
+                                    </MDBTabsLink>
+                                </MDBTabsItem>
+                            }
+                        </MDBTabs>
+
+                    </>
+                )}
 
                 <MDBTabsContent>
                     <MDBTabsPane open={selectMainTab === 'sms'}>
                         <div className="pt-0">
+                            {!isMobile &&
+                                <MDBCard className='shadow-0 bg-transparent'>
+                                    <MDBCardHeader className=' border-0'>
+                                        <div className='tabsHeader'>SMS</div>
+                                    </MDBCardHeader>
+                                </MDBCard>
+                            }
 
-                            <div className="p-3" >
-                                <h5 className='m-0'>SMS</h5>
-                            </div>
 
-
-                            <div className="position-relative userSearch d-flex align-items-center justify-content-between mt-2 ms-2">
+                            <div className="position-relative userSearch d-flex align-items-center justify-content-between mt-2 px-2">
                                 <input placeholder='Search' onChange={(e) => { startSearch(e) }} onKeyDown={onSearchKeyDown} />
                                 <img src={Iconsearch} alt="" className='inputIcon' />
 
                             </div>
-                            <div className="d-flex pt-2 mx-2">
+                            <div className="d-flex pt-2 mx-2 flex-wrap">
                                 <MDBChip className={`${selectedTab == 'all' ? "active" : ""}`} onClick={() => handleTabSelect('all')} active={selectedTab === 'all'} >All  {allUnreadCount > 0 && <span>({allUnreadCount + individualUnreadCount})</span>}</MDBChip>
                                 <MDBChip className={`${selectedTab == 'indi' ? "active" : ""}`} onClick={() => handleTabSelect('indi')} active={selectedTab === 'indi'}>Individual {individualUnreadCount > 0 && <span>({individualUnreadCount})</span>}</MDBChip>
                                 <MDBChip className={`${selectedTab == 'group' ? "active" : ""}`} onClick={() => handleTabSelect('group')} active={selectedTab === 'group'}>Group</MDBChip>

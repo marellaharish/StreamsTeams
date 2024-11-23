@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { allData } from "../../config/Constants";
-import { MDBIcon } from "mdb-react-ui-kit";
+import { MDBCard, MDBCardHeader, MDBIcon } from "mdb-react-ui-kit";
 import { Enter, Profile } from "../../assets/images";
 import { isIOS, isAndroid, isMobile } from 'react-device-detect';
 
@@ -155,18 +155,20 @@ const DialPad = ({ dailpadNumberClick, onClickSMSDID, onDialSMSFromDialPad }) =>
         setIsFirstInputFromDialPad(false);
         setInputValue('')
         SettingsHandler.loadSMSMessages('', phnumber, Constants.SMS_CHAT_TYPES.WS_ONE_TO_ONE_SMS, {});
-
     }
 
 
     return (
         <div className="users-view-container-full dialpadMain">
-            <div className="d-flex align-items-center justify-content-between">
 
-                <h1 className="mainText">Dialpad</h1>
+            <MDBCard className='shadow-0 bg-transparent'>
+                <MDBCardHeader className=' border-0 d-flex align-items-center justify-content-between'>
+                    <div className='tabsHeader'>
+                        Dialpad</div>
+                    <div className="cursor-pointer" title="SMS" onClick={onClickSMS}><MDBIcon fas icon="comment-alt" /></div>
+                </MDBCardHeader>
+            </MDBCard>
 
-                <div className="cursor-pointer pe-3" title="SMS" onClick={onClickSMS}><MDBIcon fas icon="comment-alt" /></div>
-            </div>
 
             <div className="dialpadView">
                 {primaryDID && primaryDID != null && primaryDID != "undefined"
@@ -184,7 +186,6 @@ const DialPad = ({ dailpadNumberClick, onClickSMSDID, onDialSMSFromDialPad }) =>
                         onKeyDown={handleKeyPress} // Log key press
                     />
 
-                    {/* Show backspace icon only if there's input */}
                     {inputValue.length > 0 && (
                         <MDBIcon
                             fas
@@ -201,7 +202,7 @@ const DialPad = ({ dailpadNumberClick, onClickSMSDID, onDialSMSFromDialPad }) =>
                 {/* Dial Pad */}
                 {/* Dial Pad */}
                 {showDialPad ? (
-                    <div className="mt-4">
+                    <div className="mt-5">
                         <DialPadKeys onNumberClick={handleNumberClick} />
                     </div>
                 ) :

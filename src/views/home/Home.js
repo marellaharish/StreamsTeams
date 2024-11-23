@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { MDBCol, MDBContainer, MDBIcon, MDBRow } from 'mdb-react-ui-kit'
+import React, { useEffect, useRef, useState } from 'react'
+import { MDBBadge, MDBCol, MDBContainer, MDBDropdown, MDBDropdownItem, MDBDropdownMenu, MDBDropdownToggle, MDBIcon, MDBInput, MDBRadio, MDBRow, MDBTabsContent, MDBTabsPane } from 'mdb-react-ui-kit'
 import { isIOS, isAndroid, isMobile } from 'react-device-detect';
 import { useLocation } from 'react-router-dom';
 import { Tooltip } from "react-tooltip";
@@ -18,6 +18,10 @@ import Welcome from './Welcome';
 import Params from '../../config/Params'
 import Utils from '../../classes/utils/util';
 import SearchReasult from '../../components/home/SearchReasult';
+import Contacts from '../../components/home/Contacts';
+import DialPad from '../../components/home/DialPad';
+import DarkMode from '../../components/utils/DarkMode';
+import { dialpad, Iconsearch } from '../../assets/images';
 
 let TAG = "[Home.js].";
 
@@ -170,6 +174,7 @@ const HomePage = () => {
       setGroupSelectStatus(true);
       setSMSGroupData(sms_group_data);
       setSelectedContact(null);
+      setShowDropdown(false)
 
     } catch (e) {
 
@@ -186,6 +191,7 @@ const HomePage = () => {
       setDIDSelectStatus(false);
       setGroupSelectStatus(false);
       setSelectedContact(null);
+      setShowDropdown(false)
 
     } catch (e) {
 
@@ -308,70 +314,276 @@ const HomePage = () => {
 
   console.log(TAG + "platform --- " + getPlatform() + " :: getPlatformNew :: " + getPlatformNew() + " :: isMobile :: " + isMobile);
 
+  const [activeTab, setActiveTab] = useState('SMS'); // Default active tab
+
+  const handleBasicClick = (value) => {
+    console.log(value, "handle basic click");
+    if (value === activeTab) {
+      return;
+    }
+    setActiveTab(value);
+  };
+
+  const onDialSMSFromDialPad = (userData) => {
+    try {
+
+      console.log('[onDialSMSFromDialPad] Start :: ');
+
+    } catch (e) {
+      console.log('[onDialSMSFromDialPad] Error :: ' + e);
+    }
+
+  }
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const [selectedStatus, setSelectedStatus] = useState('On Desktop');
+
+
+  const statusOptions = [
+    { label: 'On Desktop', bgClass: 'onlineStatus' },
+    { label: 'Be Right Back', bgClass: 'onlineStatus bg-danger' },
+    { label: 'Busy', bgClass: 'onlineStatus bg-danger' },
+    { label: 'Not At My Desk', bgClass: 'onlineStatus bg-danger' },
+    { label: 'Out To Lunch', bgClass: 'onlineStatus bg-danger' },
+    { label: 'Stepped Out', bgClass: 'onlineStatus bg-danger' },
+    { label: 'Appear Offline', bgClass: 'onlineStatus bg-secondary' },
+  ];
+
+  const handleStatusChange = (label) => {
+    setSelectedStatus(label);
+  };
+
+
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const handleDropdownToggle = () => {
+    setIsDropdownVisible((prev) => !prev);
+  };
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsDropdownVisible(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+
+
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchRef = useRef(null);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape') {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscKey);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, []);
+
+
+
+
   return (
     <>
+
+      {!isMobile && (
+        <>
+
+          <div className="RcDrawer-paper">
+            <div className="hOLPxV  shadow-end-0">
+
+              {showDropdown && (
+                <>
+                  <div className="overlayNew" style={{ display: showDropdown ? "block" : "none" }}>
+                    <div className="searchDropdown" ref={searchRef}>
+                      <div className="position-relative">
+                        <input type="text" placeholder='Search' value="meeting" />
+                        <img src={Iconsearch} alt="" className='inputIconEnd' />
+                      </div>
+                    </div>
+                    <div className="searchDropdownreasult">
+                      <SearchReasult />
+                    </div>
+                  </div>
+                </>)}
+
+              <div
+                className={`d-flex align-items-center mainTabs ${activeTab === 'SMS' ? 'active' : ''}`}
+                onClick={() => handleBasicClick('SMS')}
+              >
+                <i className="fas fa-comments fa-lg"></i>
+                <div className='d-flex align-items-center'>
+                  <span className="ms-2">SMS</span>
+                  <MDBBadge pill color='success' light className='ms-2'>
+                    10
+                  </MDBBadge>
+                </div>
+              </div>
+
+              <div
+                className={`d-flex align-items-center mainTabs ${activeTab === 'Contacts' ? 'active' : ''}`}
+                onClick={() => handleBasicClick('Contacts')}
+              >
+                <i className="far fa-address-book fa-lg"></i>
+                <div className='d-flex align-items-center'>
+                  <span className="ms-2">Contacts</span>
+                </div>
+              </div>
+
+
+              <div
+                className={`d-flex align-items-center mainTabs ${activeTab === 'Phone' ? 'active' : ''}`}
+                onClick={() => handleBasicClick('Phone')}
+              >
+                <img src={dialpad} width={23} />
+                <div>
+                  <span className="ms-2">Dialpad</span>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="kycUAM" >
+              <div className="me-3 cursor-pointer" onClick={() => setShowDropdown(true)}>
+                <i className="fas fa-magnifying-glass fa-lg"></i>
+              </div>
+              <div className="me-2 cursor-pointer" onClick={handleDropdownToggle}>
+                <i className="fas fa-gear fa-lg"></i>
+              </div>
+              {isDropdownVisible && (
+                <div className='dropDownSettings' ref={dropdownRef}>
+                  <div class="sc-czXssZ eWaaYG">
+                    <h1 class="jupiter-MuiTypography-root sc-jJMGHv sc-jXmsZE fPsbdp iYwrwl">
+                      Surya Konala
+                    </h1>
+                    <button class="jupiter-MuiButtonBase-root jupiter-MuiButton-root jupiter-MuiButton-text RcButton-text sc-ksluoS sc-bpSgSL jFnKxu eQgYCX">
+                      <span class="jupiter-MuiButton-label">
+                        View profile
+                      </span>
+                    </button>
+                  </div>
+                  <ul>
+                    <li className='p-0'>
+                      <MDBDropdown animation={false}>
+                        <MDBDropdownToggle>
+                          <div className="d-flex align-items-center defaultFont">
+                            <div className={statusOptions.find(option => option.label === selectedStatus)?.bgClass + ' rounded-circle me-2'}></div>
+                            {selectedStatus}
+                          </div>
+                        </MDBDropdownToggle>
+                        <MDBDropdownMenu className='dropdownWidth' responsive='end'>
+                          <MDBDropdownItem link onClick={() => handleStatusChange('On Desktop')}>
+                            <div className="d-flex align-items-center">
+                              <div className='onlineStatus rounded-circle me-2'></div>
+                              On Desktop
+                            </div>
+                          </MDBDropdownItem>
+                          {statusOptions.slice(1).map((option) => (
+                            <MDBDropdownItem key={option.label} link onClick={() => handleStatusChange(option.label)}>
+                              <div className="d-flex align-items-center">
+                                <div className={option.bgClass + ' rounded-circle me-2'}></div>
+                                {option.label}
+                              </div>
+                            </MDBDropdownItem>
+                          ))}
+                          <div className='dropdown-divider'></div>
+                          <form className='p-3'>
+                            <MDBInput placeholder='Add a new custom message' />
+                            <div className="text-center mt-3">
+                              <MDBRadio name='inlineRadio' id='inlineRadio1' value='option1' label='Busy' inline />
+                              <MDBRadio name='inlineRadio' id='inlineRadio2' value='option2' label='Available' inline />
+                            </div>
+                          </form>
+                        </MDBDropdownMenu>
+                      </MDBDropdown>
+                    </li>
+                    <li onClick={toggleDropdown}>
+                      <div className='d-flex align-items-center justify-content-between'>
+                        Theme
+                        <MDBIcon fas icon={isOpen ? "caret-down" : "caret-right"} color='secondary' />
+                      </div>
+                    </li>
+                    <div className={`dropdown-content ${isOpen ? "show" : ""}`}>
+                      <DarkMode />
+                    </div>
+                    <li>
+                      Settings
+                    </li>
+                    <li>
+                      Sign out
+                    </li>
+                  </ul>
+
+
+
+                </div>
+              )}
+
+
+
+            </div >
+          </div >
+        </>
+      )}
+
       {/* <Header onLoad={() => handleComponentLoad('header')} /> */}
-      <div className="RcDrawer-paper">
-
-        <div className='hOLPxV shadow-2 shadow-end-0'>
-          <div className='d-flex align-items-center mainTabs active sms'>
-            <i class="fas fa-comments fa-lg"></i>
-            <div>
-              <span className='ms-2'>SMS</span>
-            </div>
-          </div>
 
 
-          <div className='d-flex align-items-center mainTabs'>
-            <i class="far fa-address-book  fa-lg"></i>
-            <div>
-              <span className='ms-2'>Contacts</span>
-            </div>
-          </div>
-
-          <div className='d-flex align-items-center mainTabs'>
-            <i class="fas fa-fax fa-lg"></i>
-            <div>
-              <span className='ms-2'>Fax</span>
-            </div>
-          </div>
-
-          <div className='d-flex align-items-center mainTabs'>
-            <i class="fas fa-phone fa-lg"></i>
-            <div>
-              <span className='ms-2'>Phone</span>
-            </div>
-          </div>
-
-          <div className='d-flex align-items-center mainTabs'>
-            <i class="fas fa-ellipsis fa-lg"></i>
-            <div>
-              <span className='ms-2'>More</span>
-            </div>
-          </div>
-        </div>
-
-        <div className='kycUAM'>
-          <div className="mx-3 cursor-pointer">
-            <i class="fas fa-plus fa-lg"></i>
-          </div>
-          <div className="me-2 cursor-pointer">
-            <i class="fas fa-gear fa-lg"></i>
-          </div>
-        </div>
-      </div>
       <MDBContainer fluid>
         <MDBRow>
 
-          <MDBCol md={3} lg={3} sm={12} className='ps-0 pe-0' id='HideGroups'>
+          <MDBCol md={3} lg={3} sm={12} className='ps-0 pe-0 border-last border-2' id='HideGroups'>
 
-            <UsersComponent onLoad={() => handleComponentLoad('users')}
-              onClickGroup={onClickGroup}
-              onClickSMSDID={onClickSMSDID}
-              onSelectIndividualSMS={onSelectIndividualSMS}
-              onContactSelect={onContactSelect}
-              dailpadNumberClick={dailpadNumberClick} />
 
+
+            <MDBTabsContent>
+              <MDBTabsPane open={activeTab === 'SMS'}>
+                <UsersComponent onLoad={() => handleComponentLoad('users')}
+                  onClickGroup={onClickGroup}
+                  onClickSMSDID={onClickSMSDID}
+                  onSelectIndividualSMS={onSelectIndividualSMS}
+                  onContactSelect={onContactSelect}
+                  dailpadNumberClick={dailpadNumberClick} />
+              </MDBTabsPane>
+              <MDBTabsPane open={activeTab === 'Contacts'}>
+                <Contacts contacts_tab_selection={true} />
+              </MDBTabsPane>
+              <MDBTabsPane open={activeTab === 'Fax'}>Tab 3 content</MDBTabsPane>
+              <MDBTabsPane open={activeTab === 'Phone'}>
+                <DialPad dailpadNumberClick={dailpadNumberClick}
+                  onClickSMSDID={onClickSMSDID}
+                  onDialSMSFromDialPad={onDialSMSFromDialPad} />
+              </MDBTabsPane>
+              <MDBTabsPane open={activeTab === 'More'}>Tab 5 content</MDBTabsPane>
+            </MDBTabsContent>
           </MDBCol>
 
           {isMobile == false &&
@@ -382,7 +594,7 @@ const HomePage = () => {
 
                   console.log('this is not mobile ----------')}
 
-                <MDBCol md={9} lg={9} sm={12} className='mob-d-none'>
+                <MDBCol md={9} lg={9} sm={12} className='mob-d-none ps-1'>
 
                   {groupselectstatus || didselectstatus || (selectedContact != null && selectedContact.length > 0) ?
                     <>
@@ -427,7 +639,7 @@ const HomePage = () => {
                                         <div className="w-100">
                                           <ChatsView user_data={userData} />
                                         </div>
-                                        <div className={`${!groupselectstatus == false ? 'd-none' : 'w-360px'} `}>
+                                        <div className={`${groupselectstatus == false ? 'd-none' : 'w-360px'} `}>
                                           <SearchReasult />
                                         </div>
                                       </div>

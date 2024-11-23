@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { MDBAccordion, MDBAccordionItem, MDBBadge, MDBChip, MDBIcon, MDBInput, MDBPagination, MDBPaginationItem, MDBPaginationLink, MDBTabs, MDBTabsContent, MDBTabsItem, MDBTabsLink, MDBTabsPane } from 'mdb-react-ui-kit'
+import { MDBAccordion, MDBAccordionItem, MDBBadge, MDBCard, MDBCardHeader, MDBChip, MDBIcon, MDBInput, MDBPagination, MDBPaginationItem, MDBPaginationLink, MDBTabs, MDBTabsContent, MDBTabsItem, MDBTabsLink, MDBTabsPane } from 'mdb-react-ui-kit'
 import { contactsWithStatus, contactTeams, GlobalContactsData, OtherStreamsContactsData } from '../../config/Constants'
 import { Group, Iconsearch, Profile } from '../../assets/images'
 import EmitterConstants from '../../config/EmitterConstants'
@@ -308,7 +308,7 @@ const Contacts = ({ contacts_tab_selection }) => {
                             {username}  {extension}
                         </p>
                         <div className="d-flex align-items-center defaultFont">
-                            <div className={`rounded-circle me-2 `} />
+                            <div className={`rounded-circle me-2 ${member.STATUS ? "bg-secondary" : "bg-secondary"} `} />
                             {member.STATUS ? member.STATUS : 'Offline'}
                         </div>
                     </div>
@@ -357,13 +357,19 @@ const Contacts = ({ contacts_tab_selection }) => {
     return (
 
         <div>
+            <MDBCard className='shadow-0 bg-transparent'>
+                <MDBCardHeader className=' border-0'>
+                    <div className='tabsHeader'>
+                        Contacts</div>
+                </MDBCardHeader>
+            </MDBCard>
 
-            <div className="position-relative userSearch d-flex align-items-center justify-content-between mt-2 pe-2">
+            <div className="position-relative userSearch d-flex align-items-center justify-content-between mt-2 px-2">
                 <input placeholder='Search' />
                 <img src={Iconsearch} alt="" className='inputIcon' />
 
             </div>
-            <div className="d-flex flex-wrap pt-2" ref={containerRef}>
+            <div className="d-flex pt-2 mx-2 flex-wrap" ref={containerRef}>
                 {/* <MDBChip className={`${selectedTab == 'group' ? "active" : ""}`} onClick={() => handleTabSelect('group')} active={selectedTab === 'group'}>Other Streams</MDBChip> */}
                 <MDBChip className={`${selectedTab == 'company' ? "active" : ""}`} onClick={() => handleTabSelect('company')} active={selectedTab === 'company'}>Company</MDBChip>
                 <MDBChip className={`${selectedTab == 'other' ? "active" : ""}`} onClick={() => handleTabSelect('other')} active={selectedTab === 'other'}>Other</MDBChip>

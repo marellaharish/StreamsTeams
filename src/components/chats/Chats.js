@@ -1189,7 +1189,7 @@ const ChatsView = ({ user_data }) => {
             <div className="d-hide">
                 <Header />
             </div>
-            <MDBCard>
+            <MDBCard className='shadow-0'>
                 <MDBCardHeader>
                     <div className='d-flex align-items-center'>
                         {isMobile &&
@@ -1405,6 +1405,12 @@ const ChatsView = ({ user_data }) => {
 
 
                     <div className="MessageTextAreaContainer" >
+                        <div className="unreadJump">
+                            <div>
+                                <MDBIcon fas icon="arrow-down" className='me-2' />
+                                5 unread messages
+                            </div>
+                        </div>
 
                         {/* SMS Banner starts */}
                         <div>

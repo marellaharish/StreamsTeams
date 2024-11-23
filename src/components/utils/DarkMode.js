@@ -72,37 +72,34 @@ const DarkMode = () => {
 
 
     return (
-        <div className="dark_mode">
-            <div className="options">
-                <ul>
-                    <li>
+        <div className="ThemeOptions">
+            <div className="">
+                <ul className="p-0">
+                    <li onClick={() => toggleTheme("light")} className={`${selectedColorTheme === "light" ? "active" : ""
+                        }`}>
                         <a
                             type="checkbox"
-                            className={`nav-link px-3 d-flex justify-content-start align-items-center ${selectedColorTheme === "light" ? "active" : ""
-                                }`}
-                            onClick={() => toggleTheme("light")}
+
+
                         >
                             <MDBIcon far icon="sun" className="me-2 position-relative" /> Light
                         </a>
                     </li>
-                    <hr className="border my-1" />
-                    <li>
+
+                    <li onClick={() => toggleTheme("dark")} className={`${selectedColorTheme === "dark" ? "active" : ""
+                        }`}>
                         <a
                             type="checkbox"
-                            className={`nav-link px-3 d-flex justify-content-start align-items-center ${selectedColorTheme === "dark" ? "active" : ""
-                                }`}
-                            onClick={() => toggleTheme("dark")}
+
                         >
                             <MDBIcon far icon="moon" className="me-2 position-relative" /> Dark
                         </a>
                     </li>
-                    <hr className="border my-1" />
-                    <li>
+
+                    <li onClick={() => toggleTheme("system")} className={`${selectedColorTheme === "system" ? "active" : ""
+                        }`}>
                         <a
                             type="checkbox"
-                            className={`nav-link px-3 d-flex justify-content-start align-items-center ${selectedColorTheme === "system" ? "active" : ""
-                                }`}
-                            onClick={() => toggleTheme("system")}
                         >
                             <MDBIcon fas icon="desktop" className="me-2 position-relative" /> System Default
                         </a>

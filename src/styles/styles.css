@@ -2,7 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: Helvetica, sans-serif;
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
     font-optical-sizing: auto;
     font-variation-settings:
         "wdth" 100;
@@ -18,15 +18,16 @@ body {
     --primary-300: #a9e4bb;
     --accent-100: #12873f;
     --accent-200: #dff6e8;
-    --text-100: #000000;
+    --text-100: #4F4F4F;
     --text-200: #6b6b6b;
     --bg-100: #FFFFFF;
     --bg-200: #FFFFFF;
     --bg-300: #ffffff;
     --bg-400: #e1e1e1;
-    --secondary-text: #484848;
+    --secondary-text: rgb(18, 18, 18);
     --text: #000;
-    --border-color: #ccc;
+    --border-color: whitesmoke !important;
+    --border-color-Dark: #ccc !important;
     --text-white: #fff;
     --dailpadBtn: #eee;
     --gm3-color-on-surface: #333333;
@@ -74,7 +75,9 @@ body {
     --bg-300: #454545;
     --bg-400: #2b2b2b;
     --text: #FFFFFF;
-    --border-color: #9e9e9e;
+    --border-color: #353535;
+    --border-color-Dark: #353535 !important;
+
     --dateText: #DBDBDB;
     --secondary-text: #efefef;
     --inputBg: #0e0e0e;
@@ -188,6 +191,13 @@ body {
         background-color: var(--active-card-background-color) !important;
         color: #FFFFFF !important;
     }
+
+    .dropDownSettings {
+        box-shadow: rgba(0, 0, 0, 0.1) 0px 3px 8px;
+    }
+
+
+
 }
 
 
@@ -214,8 +224,7 @@ body {
 
 }
 
-.shadow-2,
-.RcDrawer-paper {
+.shadow-2 {
     box-shadow: 0 0px 3px 0 rgba(0, 0, 0, .07), 0 2px 2px 0 rgb(0 0 0 / 7%) !important;
 }
 
@@ -228,7 +237,7 @@ body {
 }
 
 body {
-    /* background-color: var(--world-section-hover-bg-color) !important; */
+    background-color: var(--world-section-hover-bg-color) !important;
     color: var(--text) !important;
 }
 
@@ -308,12 +317,11 @@ p {
 
 .users-view-container-full {
     /* padding: 10px; */
-    height: calc(100vh - 180px);
+    height: calc(100vh - 80px);
     overflow-y: auto;
     width: auto;
     overflow-x: hidden;
     position: relative;
-    margin-top: 10px;
 }
 
 .Contact_list {
@@ -362,7 +370,7 @@ p {
 
 .inputIcon {
     position: absolute;
-    left: 30px;
+    left: 35px;
     top: 50%;
     transform: translate(-15px, -50%);
 }
@@ -375,15 +383,15 @@ p {
 }
 
 .MessageTextAreaContainer {
-    width: 96%;
+    width: 98%;
     position: absolute;
     bottom: 10px;
     padding: 0 20px;
-    border: 1px solid var(--active-color) !important;
+    border: 1px solid var(--border-color-Dark) !important;
     outline: none !important;
     border-radius: 35px;
     margin: auto;
-    left: 2%;
+    left: 1%;
     background-color: var(--bg-100);
 }
 
@@ -430,7 +438,7 @@ p {
 }
 
 .card-height {
-    height: calc(100vh - 153px);
+    height: calc(100vh - 115px);
     position: relative;
 }
 
@@ -459,8 +467,8 @@ p {
 }
 
 .messagesContainerMain {
-    max-height: calc(100vh - 234px);
-    min-height: calc(100vh - 234px);
+    max-height: calc(100vh - 200px);
+    min-height: calc(100vh - 200px);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -471,7 +479,7 @@ p {
 }
 
 .messagesContainer {
-    max-height: calc(100vh - 408px);
+    max-height: calc(100vh - 350px);
     overflow-y: auto;
 }
 
@@ -503,8 +511,8 @@ p {
 }
 
 .contactProfile {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border-radius: 8px;
 }
 
@@ -639,6 +647,7 @@ button {
 
 .didBuddy:hover .dateTextNew,
 .didBuddy.activeItem .ellipsis,
+.didBuddy.activeItem .dateTextNew,
 .didBuddy:hover .ellipsis {
     color: var(--dateText) !important;
 }
@@ -847,7 +856,16 @@ nav .dropdown-toggle::after,
 
 .ChatUserNameMain {
     font-size: 18px;
-    font-weight: bold;
+    font-weight: 500;
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    color: var(--secondary-text);
+}
+
+.tabsHeader {
+    font-size: 20px;
+    font-weight: 500;
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    color: var(--secondary-text);
 }
 
 .smsIcon circle {
@@ -881,7 +899,7 @@ nav .dropdown-toggle::after,
     background-color: var(--inputBg);
     border-radius: 150px;
     color: var(--text-100);
-    border: 1px solid var(--border-color) !important;
+    border: 1px solid var(--border-color-Dark) !important;
 }
 
 
@@ -1032,7 +1050,7 @@ li.nav-item {
 
 .date-divider {
     border: 1px solid #ccc;
-    width: 80%;
+    width: 60%;
     position: absolute;
     top: 50%;
     transform: translate(0px, -50%);
@@ -1059,13 +1077,16 @@ hr {
 }
 
 .text-secondary,
-.date-display,
-.chip {
+.date-display {
     color: var(--mdb-secondary) !important;
 }
 
-.defaultFont {
+.chip {
+    color: var(--text-100) !important;
+}
 
+.defaultFont {
+    font-size: 14px;
     color: var(--text-100) !important;
 }
 
@@ -1375,6 +1396,7 @@ hr {
     align-items: center;
     flex-direction: column;
     justify-content: center;
+    /* height: calc(100vh - 240px); */
 }
 
 .dailpadInput {
@@ -1507,7 +1529,7 @@ hr {
 .mainTabs {
     color: var(--dateText);
     /* background-color: #eeeeee; */
-    padding: 12px 18px;
+    padding: 10px 25px;
     border-radius: 8px;
     cursor: pointer;
     font-family: Helvetica, Arial, sans-serif;
@@ -1547,8 +1569,9 @@ hr {
     padding: 0px;
     width: 100%;
     box-sizing: border-box;
-    background: var(--mdb-body-bg);
-    /* border-bottom: 1px solid var(--mdb-gray-900); */
+    margin-bottom: 5px;
+    /* background: var(--mdb-body-bg); */
+    /* border-bottom: 2px solid var(--border-color) */
 }
 
 .kycUAM {
@@ -1562,6 +1585,7 @@ hr {
     flex-shrink: 10000;
     padding-right: 8px;
     box-sizing: border-box;
+    position: relative;
 }
 
 .exampleTooltip {
@@ -1570,4 +1594,278 @@ hr {
 
 .didColor {
     color: #007706;
+}
+
+.rounded-circle {
+    width: 12px;
+    height: 12px;
+}
+
+.dropDownSettings {
+    background-color: var(--bg-200);
+    position: absolute;
+    right: 22px;
+    top: 25px;
+    z-index: 9999;
+    width: 240px;
+    border-radius: 4px;
+
+}
+
+.eWaaYG {
+    display: block;
+    padding: 14px 16px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.iYwrwl.iYwrwl {
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    line-height: 24px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-100);
+    margin: 0 !important;
+}
+
+.eQgYCX.eQgYCX {
+    font-size: 0.875rem;
+    font-weight: 400;
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    line-height: 20px;
+    color: rgb(6, 111, 172);
+    cursor: pointer;
+    transition: color 0.15s ease-in-out;
+    padding: 0px;
+}
+
+.jupiter-MuiButton-label {
+    width: 100%;
+    display: inherit;
+    align-items: inherit;
+    justify-content: inherit;
+}
+
+.jupiter-MuiButtonBase-root {
+    color: inherit;
+    border: 0;
+    cursor: pointer;
+    margin: 0;
+    display: inline-flex;
+    outline: 0;
+    padding: 0;
+    position: relative;
+    align-items: center;
+    user-select: none;
+    border-radius: 0;
+    vertical-align: middle;
+    -moz-appearance: none;
+    justify-content: center;
+    text-decoration: none;
+    background-color: transparent;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.epRmrz.epRmrz {
+    padding-top: 0px;
+    margin-top: -8px;
+}
+
+.fgIDvl {
+    overflow: auto;
+}
+
+.jupiter-MuiList-root {
+    margin: 0;
+    padding: 0;
+    position: relative;
+    list-style: none;
+}
+
+.ewHJph.ewHJph.ewHJph {
+    margin: 8px 0px;
+}
+
+.dlFxBx {
+    position: relative;
+    margin: 0px;
+    border: 0px;
+    flex-shrink: 0;
+    overflow: initial;
+    width: 100%;
+    height: 1px;
+    background-color: rgb(229, 229, 229);
+}
+
+.dropDownSettings ul {
+    margin: 0;
+    padding: 0;
+}
+
+.dropDownSettings ul li {
+    list-style: none;
+    padding: 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    line-height: 24px;
+    position: relative;
+    cursor: pointer;
+    padding: 14px 16px;
+}
+
+.dropDownSettings ul li:hover {
+    background-color: var(--border-color);
+}
+
+
+.dropDownSettings {
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.ThemeOptions {
+    /* position: absolute; */
+    /* top: -10px; */
+    /* left: -180px; */
+    /* background: #FFFFFF; */
+    /* box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px; */
+    border-radius: 3px;
+
+}
+
+.ThemeOptions ul li {
+    padding: 14px 30px;
+}
+
+.border-last {
+    border-right: 2px solid var(--border-color) !important;
+}
+
+.ThemeOptions ul li a {
+    color: inherit !important;
+}
+
+.ThemeOptions ul li.active {
+    background-color: var(--active-color) !important;
+    color: #FFFFFF;
+}
+
+.dropdown-content {
+    display: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.dropdown-content.show {
+    display: block;
+    max-height: 200px;
+    transition: max-height 0.3s ease-in;
+}
+
+.transition-icon {
+    transition: transform 0.3s ease-in-out;
+}
+
+.rotate-down {
+    transform: rotate(0deg);
+}
+
+.rotate-right {
+    transform: rotate(90deg);
+}
+
+.dropDownSettings .dropdown .btn {
+    background: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    color: #4F4F4F;
+    font-size: 16px !important;
+    box-shadow: none !important;
+    width: 100%;
+    height: 100%;
+    padding: 14px 16px !important;
+}
+
+.dropDownSettings .dropdown .dropdown-toggle::after {
+    display: none;
+}
+
+.dropDownSettings .dropdown ul li {
+    padding: 0;
+}
+
+.unreadJump {
+    position: absolute;
+    top: -50px;
+    right: 10px;
+    cursor: pointer;
+    padding: 8px 20px;
+    background-color: var(--active-color);
+    color: #FFFFFF;
+    border-radius: 50px;
+    font-size: 14px;
+}
+
+.overlayNew {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.searchDropdown {
+    position: absolute;
+    width: 50%;
+    top: 8px;
+    background-color: var(--inputBg);
+    border-radius: 8px;
+    color: var(--text-100);
+    text-shadow: none;
+    overflow: hidden;
+    border: 2px solid var(--active-color);
+    box-shadow: none;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.searchDropdown input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    text-align: left !important;
+    font-size: 14px;
+    padding: 12px 20px;
+    background-color: var(--inputBg);
+    color: var(--text-100);
+}
+
+.searchDropdownreasult {
+    position: absolute;
+    width: 50%;
+    top: 55px;
+    background-color: var(--inputBg);
+    border-radius: 8px;
+    color: var(--text-100);
+    text-shadow: none;
+    overflow: hidden;
+    box-shadow: none;
+    /* padding: 12px; */
+    font-weight: normal;
+    font-size: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.w-90 {
+    width: 93% !important;
 }
