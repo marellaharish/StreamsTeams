@@ -186,3 +186,238 @@ exports.allData = [
     { name: "Iris Turner", extension: "109", phoneNumber: "5550101090" },
     { name: "Jack Wilson", extension: "110", phoneNumber: "5550101100" }
 ];
+
+
+exports.SearchReasultDataTest = [
+    {
+        name: "Alice Smith",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Alice",
+        msg: "Hello! How are you after the meeting?",
+    },
+    {
+        name: "Bob Johnson",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Bob",
+        msg: "Are we still on for the meeting?",
+    },
+    {
+        name: "Charlie Brown",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Charlie",
+        msg: "Don't forget to send the report after the meeting.",
+    },
+    {
+        name: "Dana White",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Dana",
+        msg: "Let's catch up after the meeting soon!",
+    },
+    {
+        name: "Eva Green",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Eva",
+        msg: "Happy to help you with the meeting details!",
+    },
+    {
+        name: "Frank Black",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Frank",
+        msg: "I'll check the meeting details and get back to you.",
+    },
+    {
+        name: "Grace Lee",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Grace",
+        msg: "Can we reschedule our meeting call?",
+    },
+    {
+        name: "Henry Adams",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Henry",
+        msg: "I'll join the meeting shortly.",
+    },
+    {
+        name: "Iris Turner",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Iris",
+        msg: "Thank you for your assistance with the meeting!",
+    },
+    {
+        name: "Jack Wilson",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Jack",
+        msg: "Let's finalize the meeting agenda soon.",
+    },
+    {
+        name: "Kathy Lee",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Kathy",
+        msg: "We need to review the meeting minutes.",
+    },
+    {
+        name: "Leo Kim",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Leo",
+        msg: "I'll send the meeting summary after I finish it.",
+    },
+    {
+        name: "Mona Scott",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Mona",
+        msg: "Let's plan the next meeting date.",
+    },
+    {
+        name: "Nina Davis",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Nina",
+        msg: "I look forward to our meeting next week.",
+    },
+    {
+        name: "Oscar Bell",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Oscar",
+        msg: "I have updated the meeting agenda.",
+    },
+    {
+        name: "Paul Grant",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Paul",
+        msg: "I'm preparing for the meeting presentation.",
+    },
+    {
+        name: "Quincy Roberts",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Quincy",
+        msg: "Looking forward to meeting with you soon.",
+    },
+    {
+        name: "Rachel Adams",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Rachel",
+        msg: "I'll review the meeting notes and send my feedback.",
+    },
+    {
+        name: "Steve Harris",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Steve",
+        msg: "The meeting went well. I'll follow up on the tasks.",
+    },
+    {
+        name: "Tina Ward",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Tina",
+        msg: "Can we schedule another meeting next week?",
+    },
+    {
+        name: "Ursula Baker",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Ursula",
+        msg: "I enjoyed our meeting today, thanks for your time.",
+    },
+    {
+        name: "Vince Miller",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Vince",
+        msg: "I'll send the meeting materials by end of the day.",
+    },
+    {
+        name: "Willie Carter",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Willie",
+        msg: "We can discuss this further in our next meeting.",
+    },
+    {
+        name: "Xena Wilson",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Xena",
+        msg: "Let's plan the agenda for the upcoming meeting.",
+    },
+    {
+        name: "Yara Hughes",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Yara",
+        msg: "I will confirm the meeting details with everyone.",
+    },
+    {
+        name: "Zachary Young",
+        profileImage: "https://via.placeholder.com/150",
+        From: "Zachary",
+        msg: "Looking forward to our next meeting.",
+    },
+];
+
+
+
+exports.SearchReasultDataFiles = [
+    {
+        name: "Admin5WebHelp_v15B.zip",
+        dateTime: "Oct 26, 2024",
+        sharedBy: "UX Team",
+        sharedIn: "You",
+        fileType: "ZipDocument"
+    },
+    {
+        name: "UXDesign_Documentation.html",
+        dateTime: "Oct 25, 2024",
+        sharedBy: "John Doe",
+        sharedIn: "You",
+        fileType: "Html"
+    },
+    {
+        name: "Financial_Report_2024.xlsx",
+        dateTime: "Oct 24, 2024",
+        sharedBy: "Finance Team",
+        sharedIn: "You",
+        fileType: "Excel"
+    },
+    {
+        name: "Marketing_Video.mp4",
+        dateTime: "Oct 23, 2024",
+        sharedBy: "Marketing Team",
+        sharedIn: "You",
+        fileType: "Video"
+    },
+    {
+        name: "ProjectPlan_2024.docx",
+        dateTime: "Oct 22, 2024",
+        sharedBy: "Project Management",
+        sharedIn: "You",
+        fileType: "Word"
+    },
+    {
+        name: "TeamMeeting_Audio.mp3",
+        dateTime: "Oct 21, 2024",
+        sharedBy: "HR Team",
+        sharedIn: "You",
+        fileType: "Audio"
+    },
+    {
+        name: "Backup_Files.zip",
+        dateTime: "Oct 20, 2024",
+        sharedBy: "IT Team",
+        sharedIn: "You",
+        fileType: "ZipDocument"
+    },
+    {
+        name: "ProductImages_Folder.zip",
+        dateTime: "Oct 19, 2024",
+        sharedBy: "Design Team",
+        sharedIn: "You",
+        fileType: "ImgBox"
+    },
+    {
+        name: "Company_Policies.pdf",
+        dateTime: "Oct 18, 2024",
+        sharedBy: "Legal Team",
+        sharedIn: "You",
+        fileType: "Pdf"
+    },
+    {
+        name: "ProjectDescription_Node.js",
+        dateTime: "Oct 17, 2024",
+        sharedBy: "Dev Team",
+        sharedIn: "You",
+        fileType: "Node"
+    }
+];

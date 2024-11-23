@@ -20,6 +20,7 @@ import IMConstants from '../../config/IMConstants';
 import DialPad from '../home/DialPad'
 import Contacts from '../home/Contacts'
 import ContactsHandler from "../../classes/contacts/ContactsHandler"
+import More from '../home/More'
 
 let selectedTabIndex = Constants.REQ_SMS_TAB_TYPE.ALL_SMS;
 let loadMoreStatus = false;
@@ -642,9 +643,9 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
     return (
         <>
-            <div className='shadow-0'>
-
-                <MDBTabs justify className='ms-2'>
+            <div className='w-100'>
+                {/* 
+                <MDBTabs justify >
                     <MDBTabsItem>
                         <MDBTabsLink onClick={() => handleMainTabSelect('sms')} active={selectMainTab === 'sms'} className='d-flex align-items-center flex-column'>
                             <i class="fas fa-comments fa-2x"></i>
@@ -679,7 +680,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                             </MDBTabsLink>
                         </MDBTabsItem>
                     }
-                </MDBTabs>
+                </MDBTabs> */}
 
 
 
@@ -687,17 +688,9 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                     <MDBTabsPane open={selectMainTab === 'sms'}>
                         <div className="pt-0">
 
-                            {/* <div className="px-3 pb-3 d-flex align-items-center justify-content-between" >
+                            <div className="p-3" >
                                 <h5 className='m-0'>SMS</h5>
-                                <div className="d-flex">
-                                    <div className="me-3">
-                                        <i class="far fa-comment fa-lg"></i>
-                                    </div>
-                                    <div className="">
-                                        <i class="fas fa-pencil fa-lg"></i>
-                                    </div>
-                                </div>
-                            </div> */}
+                            </div>
 
 
                             <div className="position-relative userSearch d-flex align-items-center justify-content-between mt-2 ms-2">
@@ -864,15 +857,20 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                         </div>
                     </MDBTabsPane>
                     <MDBTabsPane open={selectMainTab === 'Contacts'}>
-
                         <Contacts contacts_tab_selection={true} />
                     </MDBTabsPane>
-
                     <MDBTabsPane open={selectMainTab === 'dialpad'}>
                         <DialPad dailpadNumberClick={dailpadNumberClick}
                             onClickSMSDID={onClickSMSDID}
                             onDialSMSFromDialPad={onDialSMSFromDialPad} />
                     </MDBTabsPane>
+                    {isMobile &&
+                        <>
+                            <MDBTabsPane open={selectMainTab === 'more'}>
+                                <More />
+                            </MDBTabsPane>
+                        </>}
+
 
                 </MDBTabsContent>
             </div>
