@@ -1,13 +1,14 @@
 
-import knockSound from '../../assets/notification_sounds/knock.mp3'
 import { format } from 'date-fns';
 import CryptoJS from 'crypto-js';
 
 
 import IMConstants from '../../config/IMConstants';
-import buzzSound from '../../assets/notification_sounds/buzz.mp3'
-import chimedwnSound from '../../assets/notification_sounds/chimedwn.mp3'
-import doorSound from '../../assets/notification_sounds/door.mp3'
+import {
+    buzzSound, chimedwnSound, doorSound, knockSound, zero, one,
+    two, three, four, five, six, seven, eight, nine, star, hash
+} from '../../assets/sounds/sounds_index';
+
 import Constants from '../../config/Constants'
 import { showToast } from '../../views/home/ToastView'
 import Params from '../../config/Params';
@@ -74,6 +75,11 @@ class Utils {
         }
     }
 
+    static getUserTimeZone() {
+
+        return new Date().getTimezoneOffset();
+    }
+
     static getUniqueID = () => {
 
         try {
@@ -123,35 +129,66 @@ class Utils {
         return message.replace(/%@/g, () => values.shift());
     }
 
-    static getFormatedDate(latest_time, type) {
-
+    static getFormatedDate(dateString, type) {
         let output = "";
         try {
 
-            if (type == Constants.DATE_FORMATS.WS_GROUP_DID_DATE) {
+            const localDate = new Date(dateString);  // This should work without manually appending ".000Z"
+            let now = new Date();
 
-                let dateFormatOutput = format(`${latest_time}`, "MMM d, yyyy");
-                output = dateFormatOutput;
+            // Get the local timezone offset in milliseconds
+            const timezoneOffset = localDate.getTimezoneOffset() * 60000;  // getTimezoneOffset returns offset in minutes
+            const localTime = new Date(localDate.getTime() - timezoneOffset);
 
-            } else if (type == Constants.DATE_FORMATS.WS_CHAT_MESSAGE_DATE) {
+            let formatTime = (date) => {
 
-                let timeFormatOutput = format(`${latest_time}`, "hh:mm a");
-                output = timeFormatOutput;
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             }
 
+            // Check if the date is today
+            if (localTime.toDateString() === now.toDateString()) {
+
+                return (type === Constants.DATE_FORMATS.WS_HEADER_DATE) ? 'Today' : `${formatTime(localTime)}`;
+            }
+
+            // Check if the date was yesterday
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+
+            if (localTime.toDateString() === yesterday.toDateString()) {
+
+                return (type === Constants.DATE_FORMATS.WS_CHAT_MESSAGE_DATE) ? `${formatTime(localTime)}` : 'Yesterday';
+            }
+
+            // Otherwise, format as "MMM DD, YYYY"
+            output = localTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
         } catch (e) {
-            console.log('Utils [getFormatedDate] Error ::' + e);
+            console.log('Utils [formatDate] Error ::' + e);
         }
 
-        return output;
-
+        return output
     }
 
-    static notificationSound(type) {
+    static getCurrentUTCTime() {
+
+        let utcTime = new Date().toISOString()
+        try {
+
+            utcTime = utcTime.replace('T', ' ').replace(/(\.\d{3})?Z$/, '');
+
+        } catch (e) {
+            console.log('Utils [getCurrentUTCTime] Error ::' + e);
+        }
+
+        return utcTime
+    }
+
+    static playSound(type) {
         let audio;
         try {
 
-            switch (type) {
+            switch (type * 1) {
 
                 case 1:
                     audio = new Audio(buzzSound);
@@ -171,6 +208,82 @@ class Utils {
 
                 default:
                     audio = new Audio(buzzSound);
+                    break;
+
+            }
+
+            audio.preload = 'auto';
+
+            // Play the audio, but ensure it respects user interaction
+            const playPromise = audio.play();
+
+            if (playPromise !== undefined) {
+
+                playPromise.catch(error => {
+
+                    console.error('Audio playback failed:', error);
+                });
+            }
+
+        } catch (e) {
+            console.log('Utils [notificationSound] Error ::' + e);
+        }
+    }
+
+    static playDialPadTones(type) {
+        let audio;
+        try {
+
+            console.log('[playDialPadTones] type :: ' + type);
+
+            if (type == '#') {
+
+                audio = new Audio(hash);
+            } else if (type == '*') {
+
+                audio = new Audio(star);
+            }
+
+            switch (type * 1) {
+
+                case 0:
+                    audio = new Audio(zero);
+                    break;
+
+                case 1:
+                    audio = new Audio(one);
+                    break;
+
+                case 2:
+                    audio = new Audio(two);
+                    break;
+
+                case 3:
+                    audio = new Audio(three);
+                    break;
+
+                case 4:
+                    audio = new Audio(four);
+                    break;
+
+                case 5:
+                    audio = new Audio(five);
+                    break;
+
+                case 6:
+                    audio = new Audio(six);
+                    break;
+
+                case 7:
+                    audio = new Audio(seven);
+                    break;
+
+                case 8:
+                    audio = new Audio(eight);
+                    break;
+
+                case 9:
+                    audio = new Audio(nine);
                     break;
 
             }
@@ -288,6 +401,53 @@ class Utils {
     static isNumeric(value) {
 
         return /^[0-9]*$/.test(value);
+    }
+
+    static isObject(value) {
+        try {
+
+            if (typeof (value) !== "object") {
+                JSON.parse(value);
+            }
+
+            return true;
+
+        } catch (e) {
+
+            console.log('[isObject] Error  -------- :: ' + e);
+            return false
+        }
+
+        return false
+    }
+
+    static getFileType(fileName) {
+
+        try {
+
+            let fileTypeMapping = Constants.FILETYPES
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+
+            if (fileTypeMapping.images.includes(fileExtension)) {
+
+                return Constants.FILE_TYPES.IMAGES; // Images
+            } else if (fileTypeMapping.audios.includes(fileExtension)) {
+
+                return Constants.FILE_TYPES.AUDIO; // Audios
+            } else if (fileTypeMapping.videos.includes(fileExtension)) {
+
+                return Constants.FILE_TYPES.VIDEO; // Videos
+            } else {
+
+                return Constants.FILE_TYPES.FILE; // Other files
+            }
+
+        } catch (e) {
+            console.log('[getFileType] Error  -------- :: ' + e);
+        }
+
+        return -1;
+
     }
 }
 

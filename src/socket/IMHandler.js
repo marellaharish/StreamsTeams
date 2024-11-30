@@ -359,13 +359,19 @@ class IMHandler {
         try {
 
             let nMsgType = rcvData.Message.msgtype;
+            let msg = {};
 
             switch (nMsgType) {
+
+                case IMConstants.WS_SMS_GROUP_MSG_TYPE:
+
+                    this.onReceivedGroupSMSEvent(rcvData);
+                    break;
 
                 case IMConstants.WS_SMS_FEATURE_ENABLED:
                 case IMConstants.WS_SMS_FEATURE_DISABLED:
 
-                    let msg = JSON.parse(rcvData.Message.msg);
+                    msg = JSON.parse(rcvData.Message.msg);
                     let phnumbersArray = msg.phnums;
 
                     let finalPhoneNumbers;
@@ -413,10 +419,6 @@ class IMHandler {
                     }
 
                     let status = msg.enable;
-                    if (!status) {
-
-                        return;
-                    }
 
                     if ((status * 1) === 2) {
 
@@ -439,6 +441,8 @@ class IMHandler {
 
                 case IMConstants.WS_SMS_FEATURE_ENABLED_ACCOUNT_LEVLE:
                 case IMConstants.WS_SMS_FEATURE_ENABLED_USER_LEVLE:
+
+                    localStorage.setItem(Constants.WS_KEY_SMS_ENABLED_STATUS, true);
 
                     if (nMsgType === IMConstants.WS_SMS_FEATURE_ENABLED_ACCOUNT_LEVLE) {
 
@@ -799,6 +803,45 @@ class IMHandler {
             console.log(TAG + '[processDeleteMessage] Error :: ' + e);
         }
 
+    }
+
+    async onReceivedGroupSMSEvent(receivedData) {
+
+        try {
+
+            let msg = JSON.parse(receivedData.Message.msg);
+
+            let smsgid = receivedData.Message.smsgid;
+            let msgtype = receivedData.Message.msgtype;
+
+            msg.smsgid = smsgid;
+            msg.msgtype = msgtype;
+
+            console.log(TAG + "[onReceivedGroupSMSEvent] ---- msg :: " + JSON.stringify(msg));
+
+            let event = msg.event * 1;
+
+            switch (event) {
+
+                case IMConstants.SMS_GROUP.WS_SMS_GROUP_CREATE:
+
+                    StreamsHandler.onUpdateSMSGroupDetails(receivedData, msg);
+                    break;
+
+                case IMConstants.SMS_GROUP.WS_SMS_GROUP_EDIT:
+
+                    StreamsHandler.onUpdateSMSGroupDetails(receivedData, msg);
+                    break;
+
+                case IMConstants.SMS_GROUP.WS_SMS_GROUP_DELETE:
+
+                    StreamsHandler.onUpdateSMSGroupDetails(receivedData, msg);
+                    break;
+            }
+
+        } catch (e) {
+            console.log(TAG + '[onReceivedGroupSMSEvent] Error  -------- :: ' + e);
+        }
     }
 
     //*****************             GENERAL FUNCTIONS [END]  ***********************/

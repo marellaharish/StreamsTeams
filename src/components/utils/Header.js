@@ -23,9 +23,10 @@ import { Iconsearch, StreamsLogo, Profile, StreamsLogoLight } from '../../assets
 import SettingsHandler from "../../classes/settings/SettingsHandler"
 import DarkMode from "../../components/utils/DarkMode"
 import Params from "../../config/Params"
+import IMConnector from '../../socket/IMConnector'
 
 let TAG = "[Header.js]."
-export default function Header({ onLoad }) {
+export default function Header({ onLoad, onMessageSearch, setSearchLoadingStatus }) {
 
     const [uploadStatus, setUploadStatus] = useState('');
     const [searchString, setSearchString] = useState("");
@@ -116,9 +117,18 @@ export default function Header({ onLoad }) {
 
             if (event.key === "Enter") {
 
-                console.log("Enter key was pressed!");
-
                 //send server request
+
+                let searchKeyWord = event.target.value;
+                console.log("Enter key was pressed :: searchKeyWord :: " + searchKeyWord);
+
+                if (searchKeyWord !== '') {
+
+                    console.log(TAG + "[startMessageSearch] SEARCH KDEY :: " + searchKeyWord);
+
+                    onMessageSearch(true)
+                    SettingsHandler.loadSearchMessagesFromDB(searchKeyWord);
+                }
             }
 
         } catch (e) {
@@ -134,6 +144,13 @@ export default function Header({ onLoad }) {
             let searchKeyWord = event.target.value;
             console.log(TAG + "[startMessageSearch] : " + searchKeyWord);
 
+            if (searchKeyWord == '') {
+
+                console.log(TAG + "[startMessageSearch] : NO SEARCH KEY FOUND ----");
+
+                onMessageSearch(false);
+            }
+
             setSearchString(searchKeyWord);
 
         } catch (e) {
@@ -145,8 +162,6 @@ export default function Header({ onLoad }) {
     const handleStatusChange = (label) => {
         setSelectedStatus(label);
     };
-
-
 
     const toggleDropdownMenu = () => {
         setIsDropDownVisible(!isDropDownVisible);
@@ -176,6 +191,8 @@ export default function Header({ onLoad }) {
             let username = localStorage.getItem(Params.WS_LOGIN_USER);
             localStorage.clear();
 
+            IMConnector.closeSocket()
+
             navigate('/login');
 
         } catch (e) {
@@ -183,6 +200,10 @@ export default function Header({ onLoad }) {
             console.log(TAG + '[onClickSignOut] Error :: ' + e);
         }
     }
+
+    const handleClearInput = () => {
+        setSearchString('');
+    };
 
     return (
         <MDBNavbar expand='lg' className='py-3 pe-2 shadow-0 mob-d-none ps-1'>
@@ -195,10 +216,19 @@ export default function Header({ onLoad }) {
                 <div className='w-30'>
 
                     <div className="position-relative">
-                        <MDBInput size='lg' placeholder='Message Search' onChange={(e) => { startMessageSearch(e) }} onKeyDown={onSearchKeyDown} />
-                        <img src={Iconsearch} alt="" className='inputIconEnd' />
+                        <MDBInput size='lg' value={searchString} placeholder='Message Search' onChange={(e) => { startMessageSearch(e) }} onKeyDown={onSearchKeyDown} />
+                        {searchString ? (
+                            <>
+                                <MDBIcon fas icon="times" onClick={handleClearInput} className='inputIconEnd cursor-pointer' />
+                            </>)
+                            :
+                            (
+                                <>
+                                    <img src={Iconsearch} alt="" className='inputIconEnd' />
+                                </>
+                            )
+                        }
                     </div>
-
                 </div>
 
                 <MDBNavbarItem ref={dropdownRef}>
@@ -211,7 +241,7 @@ export default function Header({ onLoad }) {
                             <div className='d-flex flex-row align-items-center justify-content-end'>
                                 <MDBDropdown animation={false}>
                                     <MDBDropdownToggle>
-                                        <div className="d-flex align-items-center defaultFont">
+                                        <div className="d-flex align-items-center defaultFont d-none">
                                             <div className={statusOptions.find(option => option.label === selectedStatus)?.bgClass + ' rounded-circle me-2'}></div>
                                             {selectedStatus}
                                         </div>

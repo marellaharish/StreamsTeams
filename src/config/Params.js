@@ -14,3 +14,5 @@ exports.MACID = "macid";
 exports.COOKIE_XAUTHTOKEN = "XAUTHTOKEN";
 exports.GATEKEEPER_DOMAIN = "gatekeeperdomain";
 exports.API_SERVICE_DOMAIN = "apiserviceurl"
+exports.WS_LOGGED_USER_FIRSTNAME = "firstname";
+exports.WS_LOGGED_USER_LASTNAME = "lastname";

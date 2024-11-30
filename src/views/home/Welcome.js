@@ -8,7 +8,7 @@ const Welcome = () => {
             <MDBCard>
                 <MDBCardBody className='defaultchat-view-container p-5'>
                     <center>
-                        <h4>Hi {localStorage.getItem("LOGIN_USER")}, Welocome to Streams! </h4>
+                        <h4>Hi {localStorage.getItem("LOGIN_USER")}, Welcome to Streams! </h4>
                         <p className='fw-500'>Communicate, Collaborate and Share Your Way!</p>
                     </center>
 

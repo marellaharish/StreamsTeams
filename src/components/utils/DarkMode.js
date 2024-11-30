@@ -2,7 +2,7 @@ import { MDBIcon } from "mdb-react-ui-kit";
 import React, { useEffect, useState } from "react";
 import SystemDefault from "./SystemDefault";
 
-const DarkMode = () => {
+const DarkMode = ({ setIsOpen }) => {
 
     const [selectedColorTheme, setSelectedColorTheme] = useState(
         localStorage.getItem("selectedColorTheme") || "dark"
@@ -25,6 +25,8 @@ const DarkMode = () => {
             if (theme === "system") {
                 window.location.reload();
             }
+
+            setIsOpen(false);
 
         } catch (error) {
 

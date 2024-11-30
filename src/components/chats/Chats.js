@@ -1,22 +1,34 @@
-import EmojiPicker from 'emoji-picker-react';
-import { MDBCard, MDBCardBody, MDBCardHeader, MDBDropdown, MDBDropdownItem, MDBDropdownMenu, MDBDropdownToggle, MDBIcon, MDBInput } from 'mdb-react-ui-kit';
-import React, { useEffect, useRef, useState } from 'react';
-import { isMobile } from 'react-device-detect';
+import React, { useEffect, useRef, useState } from 'react'
+import { Comment, Copy, Delete, Emoji, Forward, Edit, Reply, Profile, Send, Upload, TimerIcon } from '../../assets/images';
+import { MDBDropdown, MDBDropdownItem, MDBDropdownMenu, MDBDropdownToggle, MDBIcon, MDBInput, MDBModal, MDBModalBody, MDBModalContent, MDBModalDialog, MDBModalFooter, MDBModalHeader, MDBModalTitle } from 'mdb-react-ui-kit';
+import {
+    MDBCard,
+    MDBCardHeader,
+    MDBCardBody,
+    MDBCardTitle,
+    MDBCardText,
+    MDBBtn
+} from 'mdb-react-ui-kit';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Comment, Emoji, Profile, SendSMS, TimerIcon, Upload } from '../../assets/images';
+import { isMobile } from 'react-device-detect';
+import { showToast } from '../../views/home/ToastView';
+import EmojiPicker from 'emoji-picker-react';
 
-import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import messageHandler from "../../classes/chat/MessageHandler";
-import StreamsHandler from "../../classes/chat/StreamsHandler";
-import SettingsHandler from '../../classes/settings/SettingsHandler';
 import evntEmitter from "../../classes/utils/EvntEmitter";
-import Utils from '../../classes/utils/util';
-import Constants, { REQ_TYPE_SMS_ACTION } from "../../config/Constants";
-import EmitterConstants from "../../config/EmitterConstants";
-import IMConstants from '../../config/IMConstants';
-import MessaageConstants from "../../config/MessaageConstants";
+import EmitterConstants from "../../config/EmitterConstants"
+import messageHandler from "../../classes/chat/MessageHandler"
+import StreamsHandler from "../../classes/chat/StreamsHandler"
+import Constants, { REQ_TYPE_SMS_ACTION } from "../../config/Constants"
+import MessaageConstants from "../../config/MessaageConstants"
 import Header from '../utils/Header';
-import ChatComponents from './ChatComponent';
+import IMConstants from '../../config/IMConstants';
+import Utils from '../../classes/utils/util';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import Attachments from './Attachments';
+import Params from '../../config/Params'
+import SettingsHandler from '../../classes/settings/SettingsHandler'
+import ChatComponents from './ChatComponent'
+import ContactsHandler from "../../classes/contacts/ContactsHandler"
 
 let source_data_for_mobile;
 let group_code;
@@ -28,8 +40,10 @@ let sid;
 
 let loadMoreStatus = false;
 let sms_popup_status = false;
-let noDataFromServer = false;
 
+let scroll_directions_list = [];//scroll_directions_list variable we will use only when we do messaage search  if we don't search it will be empty
+
+let selected_msg_smsgid = 0;
 let scrollPosition = -1
 let previousMessagesListLength = 0
 let unread_count = 0;
@@ -50,13 +64,15 @@ const ChatsView = ({ user_data }) => {
 
     const [message, setMessage] = useState('');
     const [username, setUserName] = useState('');
+    const [selectedColorTheme, setSelectedColorTheme] = useState('dark');
 
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [smsBannerVisible, setSMSBannerVisible] = useState(false)
     const [loadMoreChats, setLoadMoreChats] = useState(false);
-    const [selectedColorTheme, setSelectedColorTheme] = useState('dark');
+    const [highlightIndex, setHighlightIndex] = useState(null);
+    const [scrolledToBottom, setScrolledToBottom] = useState(false);//When we scroll bottom afer user start message searcg we will show loading indicator at bottom. So make it false if no data in server. This variable we will use to send Read Status to server when user scroll to battom of the chat 
 
     const [editedsmsgid, setEditedsmsgid] = useState(undefined)
     const [editedMessage, setEditedMessage] = useState(undefined)
@@ -177,6 +193,7 @@ const ChatsView = ({ user_data }) => {
 
     }, [emojiPickerRef]);
 
+    /*
     useEffect(() => {
 
         try {
@@ -202,6 +219,7 @@ const ChatsView = ({ user_data }) => {
         }
 
     }, [newMessageRef.current])
+    */
 
     useEffect(() => {
 
@@ -231,6 +249,8 @@ const ChatsView = ({ user_data }) => {
                 messageslengthDiff = messagesList.length - (unread_count * 1);
             }
 
+            let findMessageIndexBySmsgid = getMessageIndexForSearch()
+
             console.log(TAG + "[useEffect][messagesList] :: Scrolling useEffect previous messagesListLength : " + previousMessagesListLength + ', topIndex: ' + scrollPosition + ' :: messageslengthDiff :: ' + messageslengthDiff);
 
             previousMessagesListLength = messagesList.length
@@ -242,6 +262,8 @@ const ChatsView = ({ user_data }) => {
 
                 index = messagesList.length - 1;
             }
+
+            index = findMessageIndexBySmsgid >= 0 ? findMessageIndexBySmsgid : index
 
             if (messagesRef.current) {
 
@@ -278,6 +300,24 @@ const ChatsView = ({ user_data }) => {
     }, [messagesList]);
 
     //=============================     Emitter Functinos      ==================================
+
+    const setNewMessageRef = (node) => {
+        console.log(TAG + "[setNewMessageRef][newMessageRef.current] ===============" + node);
+
+        if (node) {
+
+            node.removeEventListener('scroll', handleScroll);
+            node.addEventListener('scroll', handleScroll);
+        } else {
+
+            if (newMessageRef.current) {
+
+                newMessageRef.current.removeEventListener('scroll', handleScroll);
+            }
+        }
+        newMessageRef.current = node;
+    };
+
     const unRegisterEmitters = () => {
 
         try {
@@ -303,6 +343,36 @@ const ChatsView = ({ user_data }) => {
     }
 
     //=============================       Scroll Functions     ==================================
+
+    const getMessageIndexForSearch = () => {
+
+        let findMessageIndexBySmsgid = -1
+        try {
+
+            console.log("[getMessageIndexForSearch] :: " + selected_msg_smsgid);
+
+            if (selected_msg_smsgid) {
+
+                findMessageIndexBySmsgid = messagesList.findIndex(message => message.smsgid === selected_msg_smsgid)
+
+                console.log("[getMessageIndexForSearch] :after : " + findMessageIndexBySmsgid);
+
+                if (findMessageIndexBySmsgid >= 0) {
+
+                    setHighlightIndex(findMessageIndexBySmsgid);
+                } else {
+
+                    setHighlightIndex(null);
+                }
+
+            }
+
+        } catch (e) {
+            console.log(TAG + '[getMessageIndexForSearch] Error :: ' + e);
+        }
+
+        return findMessageIndexBySmsgid
+    }
 
     const onReceiveUserData = (userdata) => {
 
@@ -333,28 +403,36 @@ const ChatsView = ({ user_data }) => {
 
                 const container = newMessageRef.current;
                 scrollTop = container.scrollTop;
-                isScrollBottomReached = container.scrollTop + container.clientHeight >= (container.scrollHeight - 5);//5- is gap from the bottom of the scroll.
+                isScrollBottomReached = container.scrollTop + container.clientHeight >= container.scrollHeight;//5- is gap from the bottom of the scroll.
 
                 if (scrollTop < 30) {//30- is the gap between the top and scrollbar. If the diff reaches 30 we will send the server request.
 
                     shouldScroll = true;
                 }
 
+                /*
                 console.log(TAG + '[handleScroll] shouldScroll :: ' + shouldScroll + ' :: scrollTop :: ' + scrollTop + ' :: isScrollBottomReached :: ' +
-                    isScrollBottomReached + ' :: loadMoreStatus :: ' + loadMoreStatus + ' :: noDataFromServer :: ' + noDataFromServer +
+                    isScrollBottomReached + ' :: loadMoreStatus :: ' + loadMoreStatus + ' :: scroll_direction_list :: ' + scroll_directions_list +
                     ' :: messagesList.length: ' + messagesList.length + ' :: scrollHeight :: ' + container.scrollHeight +
                     ' :: clientHeight :: ' + container.clientHeight + " :: unread_count :: " + unread_count);
+                */
             }
 
-            if (shouldScroll && !loadMoreStatus && !noDataFromServer) {// If scrolled close to the top, load more messages
+            //scroll_directions_list variable we will use only when we do messaage search if we don't search it will be empty
+            if (shouldScroll && !loadMoreStatus && !scroll_directions_list.includes(Constants.SCROLL_DIRECTION.TOP)) {// If scrolled close to the top, load more messages
 
-                loadMoreMessages();
+                loadMoreMessages(true);
             }
 
             //if (messagesList.length > 0 && scrollPosition === messagesList.length - 1) {
             if (isScrollBottomReached) {
 
                 console.log(TAG + '[handleScroll] REACHED TO BOTTOM ===== ');
+
+                if (selected_msg_smsgid && !scroll_directions_list.includes(Constants.SCROLL_DIRECTION.BOTTOM)) {//Message search is started, so when user scoll to the bottom we need show the later messages.
+
+                    loadMoreMessages(false);
+                }
 
                 sendUnReadStatusToServer(sid, group_code, phnumber);
             }
@@ -419,7 +497,7 @@ const ChatsView = ({ user_data }) => {
 
                         scrollPosition = i; // Update
 
-                        console.log(TAG + "[setCurrentIndex] ---------  i :: " + i + " :: mesg length :: " + messageElements.length + " :: elementTop :: " + elementTop + " :: elementHeight :: " + elementHeight + " :: scrollTop :: " + scrollTop + " :: scrollPosition :: " + scrollPosition + " :: CCscrollHeight :: " + container.scrollHeight + " :: CCoffsetHeight :: " + container.offsetHeight + " :: CCoffsetTop :: " + container.offsetTop)
+                        //console.log(TAG + "[setCurrentIndex] ---------  i :: " + i + " :: mesg length :: " + messageElements.length + " :: elementTop :: " + elementTop + " :: elementHeight :: " + elementHeight + " :: scrollTop :: " + scrollTop + " :: scrollPosition :: " + scrollPosition + " :: CCscrollHeight :: " + container.scrollHeight + " :: CCoffsetHeight :: " + container.offsetHeight + " :: CCoffsetTop :: " + container.offsetTop)
 
                         break;
                     }
@@ -464,10 +542,11 @@ const ChatsView = ({ user_data }) => {
 
             scrollPosition = -1;
             unread_count = 0;
+            selected_msg_smsgid = 0;
 
             loadMoreStatus = false;
             sms_popup_status = false;
-            noDataFromServer = false;
+            scroll_directions_list = [];
 
             previousMessagesListLength = 0
 
@@ -526,6 +605,7 @@ const ChatsView = ({ user_data }) => {
             }
 
             sid = group_code ? group_code + "_" + phnumber : phnumber;
+            selected_msg_smsgid = (user_data.isSearchItem === true) ? user_data.smsgid : 0
 
             if (phnumber) {
 
@@ -559,7 +639,8 @@ const ChatsView = ({ user_data }) => {
 
             }
 
-            SettingsHandler.loadSMSMessages(groupcode, phnumber, type, {}, false);
+            let direction = user_data.isSearchItem ? Constants.SCROLL_DIRECTION.SEARCH : Constants.SCROLL_DIRECTION.NEUTRAL;
+            SettingsHandler.loadSMSMessages(selected_msg_smsgid, groupcode, phnumber, type, {}, false, direction);
 
         } catch (e) {
 
@@ -596,11 +677,16 @@ const ChatsView = ({ user_data }) => {
 
             if (message_data.noData) {//No chat messages received from Server.
 
-                noDataFromServer = true;
+                if (message_data.scroll_direction && !scroll_directions_list.get(message_data.scroll_direction * 1)) {//No chat messages received from Server.
+
+                    scroll_directions_list.push(message_data.scroll_direction * 1);
+                }
 
                 setTimeout(() => {
 
+                    setIsLoading(false);
                     setLoadMoreChats(false);
+                    setScrolledToBottom(false);//When we scroll bottom afer user start message searcg we will show loading indicator at bottom. So make it false if no data in server. 
                     loadMoreStatus = false;
 
                 }, 500);
@@ -655,12 +741,26 @@ const ChatsView = ({ user_data }) => {
         }
     }
 
-    const loadMoreMessages = () => {
+    const loadMoreMessages = (isScrollTop) => {
         try {
 
-            console.log(TAG + '[loadMoreMessages] ==========');
+            console.log(TAG + '[loadMoreMessages] ========== isScrollTop :: ' + isScrollTop);
 
-            setLoadMoreChats(true);
+            let scroll_direction = Constants.SCROLL_DIRECTION.BOTTOM;
+            if (isScrollTop) {
+
+                setLoadMoreChats(true);
+                scroll_direction = Constants.SCROLL_DIRECTION.TOP;
+
+            } else {//User did message search and scrolled to bottom of the window. So load the next few messags from server.
+
+                if (!user_data.isSearchItem === true) {//If user didn't do search but did scroll bottom then don't send server request.
+
+                    return;
+                }
+
+                setScrolledToBottom(true);
+            }
 
             if (loadMoreStatus == true) {
 
@@ -674,10 +774,18 @@ const ChatsView = ({ user_data }) => {
                 is_load_more: true
             }
 
-            setTimeout(() => {
+            let type = Constants.SMS_CHAT_TYPES.WS_ONE_TO_ONE_SMS
+            if (group_code && group_code !== undefined && (group_code * 1) > 0) {
 
-                SettingsHandler.loadSMSMessages(group_code, phnumber, Constants.SMS_CHAT_TYPES.WS_GROUP_SMS, extra_data, true);
-            }, 1000)
+                type = Constants.SMS_CHAT_TYPES.WS_GROUP_SMS;
+            }
+
+            SettingsHandler.loadSMSMessages(selected_msg_smsgid, group_code, phnumber, type, extra_data, true, scroll_direction);
+
+            // setTimeout(() => {
+
+            //     SettingsHandler.loadSMSMessages(group_code, phnumber, Constants.SMS_CHAT_TYPES.WS_GROUP_SMS, extra_data, true);
+            // }, 100)
 
         } catch (e) {
             console.log("[loadMoreMessages] Error --- " + e);
@@ -723,6 +831,12 @@ const ChatsView = ({ user_data }) => {
     const onSelectAttachments = (files) => {
 
         try {
+
+            if (files && files.length > 1 || (images && images.length >= 1)) {
+
+                Utils.showAlert(MessaageConstants.SMS_ALERT_SMS_ATACHMENT_SELECT_LIMIT)
+                return;
+            }
 
             const validImages = files.filter(file => file.type.startsWith('image/'));
 
@@ -773,7 +887,19 @@ const ChatsView = ({ user_data }) => {
             e.preventDefault();
             const files = Array.from(e.dataTransfer.files);
 
-            onSelectAttachments(files);
+            const validImages = files.filter(file => file.type.startsWith('image/') ||
+                file.type.startsWith('audio/') ||
+                file.type.startsWith('video/'))
+
+
+            if (validImages.length > 0) {
+
+                onSelectAttachments(files);
+
+            } else {
+
+                Utils.showAlert(MessaageConstants.SMS_ALERT_ALLOW_SMS_ATACHMENT_TYPES)
+            }
 
         } catch (e) {
 
@@ -876,16 +1002,6 @@ const ChatsView = ({ user_data }) => {
                 fromNumber = messageData.to
             }
 
-            if (actionType !== REQ_TYPE_SMS_ACTION.ACTION_SEND) {
-
-                smsDetails.group_code = messageData.group_code
-                smsDetails.group_title = messageData.group_title
-                smsDetails.group_uname = messageData.group_uname
-                smsDetails.group_lname = messageData.group_lname
-                smsDetails.group_fname = messageData.group_fname
-                smsDetails.siteid = messageData.siteid
-            }
-
             console.log(TAG + "[getGroupSMSFromToDetails] 22 toNumber: " + toNumber + ', fromNumber: ' + fromNumber +
                 ', group_code: ' + group_code + ', phnumber: ' + phnumber);
 
@@ -930,6 +1046,34 @@ const ChatsView = ({ user_data }) => {
             smsDetails.to = toNumber
             smsDetails.from = fromNumber
 
+            let firstname = localStorage.getItem(Params.WS_LOGGED_USER_FIRSTNAME);
+            let lastname = localStorage.getItem(Params.WS_LOGGED_USER_LASTNAME);
+            let loggedInUser = localStorage.getItem(Params.WS_LOGIN_USER);
+            let siteid = localStorage.getItem(Params.WS_SITE_ID);
+
+            if (messageData && messageData.group_code) {
+
+                smsDetails.group_code = messageData.group_code
+            } else {
+
+                smsDetails.group_code = group_code
+            }
+
+            if (messageData && messageData.group_title) {
+
+                smsDetails.group_title = messageData.group_title
+            } else {
+
+                smsDetails.group_title = group_title
+            }
+
+            smsDetails.group_uname = loggedInUser
+            smsDetails.group_lname = lastname
+            smsDetails.group_fname = firstname
+            smsDetails.siteid = siteid
+
+
+
         } catch (e) {
             console.log(TAG + '[getGroupSMSFromToDetails] Error  -------- :: ' + e);
             return false
@@ -971,17 +1115,11 @@ const ChatsView = ({ user_data }) => {
 
             let fromUserDIDList = StreamsHandler.loadFromUserDIDs(); // Get User DID list
             if (fromUserDIDList === null || fromUserDIDList === undefined || fromUserDIDList.length <= 0) {
+
                 // show alert for no DID's available for Group
                 let message = MessaageConstants.SMS_ALERT_SMS_DID__NOT_AVAILABLE
                 Utils.showAlert(message)
                 return false
-            }
-
-            if (isStreamsUser) {
-                // GET cellphone number of streams user
-            } else {
-
-                // Get SMS DID's of Non-streams user
             }
 
             if (actionType !== REQ_TYPE_SMS_ACTION.ACTION_SEND && fromUserDIDList.includes(fromNumber)) {
@@ -1006,18 +1144,7 @@ const ChatsView = ({ user_data }) => {
                     fromNumber = strPersistDID
                 } else {
 
-                    // show popup for enter the toNumber and to select fromNumber 
-
-                    smsDetails.did_list = fromUserDIDList
-                    smsDetails.isEnableAlwaysUseDID = false
-                    smsDetails.from = fromUserDIDList[0]
-
-                    setSMSPopupInputs(smsDetails)
-
-                    setIsModalVisible(true);  // Set modal visibility to true to show popup
-
-                    return false
-
+                    showSMSPopUp();
                 }
             }
 
@@ -1033,6 +1160,45 @@ const ChatsView = ({ user_data }) => {
 
     }
 
+    const showSMSPopUp = () => {
+
+        try {
+
+            let fromUserDIDList = StreamsHandler.loadFromUserDIDs(); // Get User DID list
+            if (fromUserDIDList === null || fromUserDIDList === undefined || fromUserDIDList.length <= 0) {
+
+                console.log(TAG + '[showSMSPopUp] == USER DO NOT HAVE ASSIGN DIDS == ')
+                return
+            }
+
+            let strPersistDID = localStorage.getItem(Constants.WS_KEY_SMS_ALWAYS_USE_DID);
+            let isEnableAlwaysUseDID = (strPersistDID && strPersistDID != null && strPersistDID * 1 > 0)
+
+            if (isEnableAlwaysUseDID) {
+
+                fromUserDIDList[0] = strPersistDID
+
+                let finalList = new Set(fromUserDIDList);
+                fromUserDIDList = [...finalList]
+
+            }
+
+            smsDetails.did_list = fromUserDIDList
+            smsDetails.isEnableAlwaysUseDID = isEnableAlwaysUseDID
+            smsDetails.from = fromUserDIDList[0]
+            smsDetails.isToNumberNonEditable = true
+
+            console.log(TAG + "[showSMSPopUp] --- smsDetails ::  " + JSON.stringify(smsDetails));
+
+            setSMSPopupInputs(smsDetails)
+
+            setIsModalVisible(true);  // Set modal visibility to true to show popup
+
+        } catch (e) {
+            console.log(TAG + '[showSMSPopUp] Error  -------- :: ' + e);
+        }
+    }
+
     const onClickSMSAction = (messageData, actionType) => {
 
         try {
@@ -1044,8 +1210,12 @@ const ChatsView = ({ user_data }) => {
             }
 
             if (actionType == REQ_TYPE_SMS_ACTION.ACTION_DELETE) {
+
                 // Write the Delete message code
-                StreamsHandler.deleteSMSMessage(messageData)
+                if (window.confirm(MessaageConstants.SMS_ALERT_MESSAGE_DELETE)) {
+
+                    StreamsHandler.deleteSMSMessage(messageData)
+                }
                 return
             }
 
@@ -1058,11 +1228,11 @@ const ChatsView = ({ user_data }) => {
 
             let group_sms_status = (group_code && group_code !== undefined && parseInt(group_code) > 0);
 
-            console.log("[onClickSMSAction] ------- group_sms_status :: " + group_sms_status + ', actionType: ' + actionType);
-
             let sms_enable_status = localStorage.getItem(Constants.WS_KEY_SMS_ENABLED_STATUS);
 
-            if (!sms_enable_status) {
+            console.log("[onClickSMSAction] ------- sms_enable_status :: " + sms_enable_status + " ::  group_sms_status :: " + group_sms_status + ', actionType: ' + actionType);
+
+            if (sms_enable_status == "false" || sms_enable_status == null) {
 
                 if (!isStreamsUser) {
 
@@ -1189,7 +1359,7 @@ const ChatsView = ({ user_data }) => {
             <div className="d-hide">
                 <Header />
             </div>
-            <MDBCard className='shadow-0'>
+            <MDBCard>
                 <MDBCardHeader>
                     <div className='d-flex align-items-center'>
                         {isMobile &&
@@ -1197,7 +1367,11 @@ const ChatsView = ({ user_data }) => {
                                 <MDBIcon fas icon="arrow-left" />
                             </div>
                         }
-                        <div className='ChatUserNameMain'>{username}</div>
+                        <div className='ChatUserNameMain'>
+                            {
+                                group_title ? (ContactsHandler.getDisplayName(username) + "[" + group_title + "]") : ContactsHandler.getDisplayName(username)
+                            }
+                        </div>
                     </div>
                 </MDBCardHeader>
                 <MDBCardBody className='card-height position-relative p-0'
@@ -1251,7 +1425,7 @@ const ChatsView = ({ user_data }) => {
                         </div>
                     ) : (
                         <>
-                            <div className={`px-4 ${!images.length > 0 ? "messagesContainerMain" : "messagesContainer"}`} ref={newMessageRef}>
+                            <div className={`px-4 ${!images.length > 0 ? "messagesContainerMain" : "messagesContainer"}`} ref={setNewMessageRef}>
 
                                 <div className='firstChat'>
 
@@ -1287,12 +1461,15 @@ const ChatsView = ({ user_data }) => {
                                                     }
                                                 }
 
-                                                const messageFrom = parsedMessage?.from || '';
-                                                const messageTo = parsedMessage?.to || '';
+                                                const loggedUser = localStorage.getItem(Params.WS_LOGIN_USER)
+                                                let isIncomingMessage = (parsedMessage && parsedMessage.direction && parsedMessage.direction * 1 ===
+                                                    Constants.REQ_TYPE_CHAT.WS_INCOMING_MESSAGE) || false
+
+                                                let messageFrom = (parsedMessage && parsedMessage.group_uname) ? parsedMessage.group_uname : (isIncomingMessage ? message.phnumber : loggedUser)
                                                 const messageContent = parsedMessage?.msg || [];
 
                                                 let msg_time = message.latest_time ? message.latest_time : message.messagetime;
-                                                const messageDate = Utils.getFormatedDate(msg_time, Constants.DATE_FORMATS.WS_GROUP_DID_DATE);
+                                                const messageDate = Utils.getFormatedDate(msg_time, Constants.DATE_FORMATS.WS_HEADER_DATE);
 
                                                 const is_smsgid_available = !(!message.smsgid || message.smsgid === '' || message.smsgid === undefined);
 
@@ -1331,7 +1508,7 @@ const ChatsView = ({ user_data }) => {
                                                         }
 
 
-                                                        <div key={index} ref={(el) => (messagesRef.current[index] = el)} className={`chatComponent py-3 ${index === 0 && !images.length > 0 ? "firstChat" : ""}`}>
+                                                        <div key={index} ref={(el) => (messagesRef.current[index] = el)} className={`chatComponent py-3 ${index === 0 && !images.length > 0 ? "firstChat" : ""}  ${index === highlightIndex ? "highlightComponent" : ""}`}>
                                                             <div className='mb-4'>
                                                                 <div className='d-flex align-items-start w-100'>
                                                                     <img src={Profile} alt={message.message.from}
@@ -1342,7 +1519,7 @@ const ChatsView = ({ user_data }) => {
 
                                                                             <div className="d-flex align-items-center justify-content-between">
                                                                                 <div className="d-flex">
-                                                                                    <p className='ChatUserName'>{messageFrom}</p>
+                                                                                    <p className='ChatUserNameChat'>{ContactsHandler.getDisplayName(messageFrom)}</p>
                                                                                     {is_smsgid_available &&
                                                                                         (
                                                                                             <p className='text-secondary ps-2'>{Utils.getFormatedDate(msg_time, Constants.DATE_FORMATS.WS_CHAT_MESSAGE_DATE)}</p>
@@ -1389,14 +1566,22 @@ const ChatsView = ({ user_data }) => {
                                                 );
                                             })}
 
-                                        </> : <>
+                                        </> : (
+                                            <>
+                                                <h1>Hi {localStorage.getItem("LOGIN_USER")?.split('@')[0]} !!!</h1>
+                                                {
 
-                                            <h1>Hi {localStorage.getItem("LOGIN_USER")?.split('@')[0]} !!!</h1>
-                                            <p>
-                                                Send SMS Message to <b>{username}</b> from { }
-                                            </p>
-
-                                        </>}
+                                                    (user_data && user_data !== null && user_data !== undefined) ?
+                                                        <p className='p-3 mb-3'>
+                                                            There is no message history in this group. Kindly hover on the Group and click the Plus [+] icon to Send SMS Message.
+                                                        </p>
+                                                        :
+                                                        <p>
+                                                            Send SMS Message to <b>{username}</b> from { }
+                                                        </p>
+                                                }
+                                            </>
+                                        )}
 
                                 </div>
                             </div>
@@ -1405,12 +1590,13 @@ const ChatsView = ({ user_data }) => {
 
 
                     <div className="MessageTextAreaContainer" >
-                        <div className="unreadJump">
+
+                        {/* <div className="unreadJump d-none" onClick={''}>
                             <div>
                                 <MDBIcon fas icon="arrow-down" className='me-2' />
                                 5 unread messages
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* SMS Banner starts */}
                         <div>
@@ -1418,7 +1604,7 @@ const ChatsView = ({ user_data }) => {
                                 ChatComponents.showSMSBanner(
                                     smsDetails,
                                     setSMSBannerVisible,
-                                    setIsModalVisible
+                                    showSMSPopUp
                                 )
                             )}
                         </div>
@@ -1478,7 +1664,7 @@ const ChatsView = ({ user_data }) => {
                                     <input
                                         type="file"
                                         id='SelectFiles'
-                                        multiple
+                                        accept={Constants.ALLOWD_MMS_TYPES}
                                         style={{ display: 'none' }}
                                         onChange={handleFileUpload}
                                     />
@@ -1514,7 +1700,7 @@ const ChatsView = ({ user_data }) => {
                                 </div>
 
                                 <div className='iconContainer ms-1' onClick={onClickSend}>
-                                    <img src={SendSMS} alt="" className='smsIcon' />
+                                    <img src={Send} alt="" className='smsIcon' />
                                 </div>
                             </div>
                         </div>
@@ -1524,17 +1710,21 @@ const ChatsView = ({ user_data }) => {
 
                 {/* SMS popup starts */}
                 <div>
-                    {isModalVisible && (
+                    {isModalVisible &&
+                        (() => {
 
-                        ChatComponents.showSMSPopUp(
-                            MessaageConstants.SMS_ALERT_GROUP_SMS_TO_FROM_NUMBER_SELECTION + ' gropName',  // Title for the modal
-                            smsPopupInputs,  // To and From number params
-                            setSMSPopupInputs, // update To and From number params
-                            isModalVisible,  // Modal visibility state
-                            setIsModalVisible,  // Function to change modal visibility
-                            onPopUpCallBack  // Callback or data handler
-                        )
-                    )}
+                            const group_title = (user_data.group_title && user_data.group_title.length > 0) ? "[" + user_data.group_title + "]" : ''
+
+                            return ChatComponents.showSMSPopUp(
+                                MessaageConstants.SMS_ALERT_GROUP_SMS_TO_FROM_NUMBER_SELECTION + group_title,  // Title for the modal
+                                smsPopupInputs,  // To and From number params
+                                setSMSPopupInputs, // update To and From number params
+                                isModalVisible,  // Modal visibility state
+                                setIsModalVisible,  // Function to change modal visibility
+                                onPopUpCallBack  // Callback or data handler
+                            )
+                        })
+                    }
                 </div>
                 {/* SMS popup Ends */}
 

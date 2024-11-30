@@ -40,6 +40,10 @@ exports.REQ_TYPE = Object.freeze({
     IMPORTED_CONTACTS: 11,
     COMPANY_CONTACTS: 12,
     OTHER_STREAMS_CONTACTS: 13,
+    VERIFY_USER_LOGIN: 14,
+    LOAD_NOTIFICATION_SOUNDS: 16,
+    DELETE_MESSAGE: 17,
+    LOAD_SEARCH_MESSAGES: 18,
 });
 
 exports.REQ_CONTACTS_TAB_TYPE = Object.freeze({
@@ -58,12 +62,14 @@ exports.REQ_TYPE_CHAT = Object.freeze({
 exports.API_HANDLER = Object.freeze({
 
     WS_APIHANDLER_SMS_ALWAYS_USE_DID: 70002,
+    WS_APIHANDLER_DELETE_MESSAGE: 541,
 });
 
 exports.DATE_FORMATS = Object.freeze({
 
-    WS_GROUP_DID_DATE: 1,
+    WS_HEADER_DATE: 1,
     WS_CHAT_MESSAGE_DATE: 2,
+    WS_CHAT_RECENTS: 3
 });
 
 exports.SMS_CHAT_TYPES = Object.freeze({
@@ -84,6 +90,44 @@ exports.REQ_TYPE_SMS_ACTION = Object.freeze({
     ACTION_SEND_FROM_POPUP: 7
 });
 
+exports.NOTIFICATION_SOUNDS = Object.freeze({
+
+    MUTE_ALL_NOTIFCATION_SOUNDS: 1,
+    USER_EVENT_NOTIFICATION_SOUND: 2,
+    NOTIFICATION_SOUNDS_ON_DEVICES: 3,
+    LIKE_NOTIFICATION_SOUNDS: 4,
+    MUTE_NOTIFICATION_SOUNDS_ON_SPECIFIC_TIME_ENABLED: 5,
+});
+
+exports.SCROLL_DIRECTION = Object.freeze({
+
+    NEUTRAL: 0,
+    SEARCH: 1,
+    TOP: 2,
+    BOTTOM: 3
+});
+
+exports.SEARCH_MESSAGES_TYPE = Object.freeze({
+
+    MESSAGE_SEARCH_LIST: 1,
+    MESSAGE_SEARCH_LIST_COUNT: 2,
+    ATTACHMENT_SEARCH_LIST: 3,
+    ATTACHMENT_SEARCH_LIST_COUNT: 4
+});
+
+exports.FILE_TYPES = Object.freeze({
+
+    IMAGES: 1,
+    AUDIO: 2,
+    VIDEO: 3,
+    FILE: 4
+});
+
+exports.FILETYPES = {
+    images: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'],
+    audios: ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a'],
+    videos: ['mp4', 'mov', 'wmv', 'avi', 'mkv', 'webm', 'flv'],
+};
 
 // SMS DID Keys  
 exports.WS_KEY_SMS_ENABLED_STATUS = "smsenabled";
@@ -117,75 +161,7 @@ exports.GATEKEEPER_SECRET_KEY = 'wUEhHzGR98240397';
 exports.ATTACHMENT_PATH = '864abd7e-68a0-11e3-a577-001e58a7db4a-864abd92-68a0-11e3-a577-001e58a7db4a'
 
 
-
-
-exports.contactTeams = [
-    { name: "123456789 001 Alice Smith", team: "Company Team" },
-    { name: "123456780 002 Bob Johnson", team: "Company Team" },
-    { name: "123456781 003 Charlie Brown", team: "Company Team" },
-    { name: "123456782 004 Dana White", team: "Company Team" },
-    { name: "123456783 005 Eva Green", team: "Company Team" },
-    { name: "123456784 006 Frank Black", team: "Company Team" },
-    { name: "123456785 007 Grace Lee", team: "Company Team" },
-    { name: "123456786 008 Henry Adams", team: "Company Team" },
-    { name: "123456787 009 Iris Turner", team: "Company Team" },
-    { name: "123456788 010 Jack Wilson", team: "Company Team" }
-];
-
-exports.contactsWithStatus = [
-    { name: "Alice Smith", extension: "101", statusLabel: 'On Desktop', bgClass: 'onlineStatus' },
-    { name: "Bob Johnson", extension: "102", statusLabel: 'Busy', bgClass: 'onlineStatus bg-danger' },
-    { name: "Charlie Brown", extension: "103", statusLabel: 'Not At My Desk', bgClass: 'onlineStatus bg-danger' },
-    { name: "Dana White", extension: "104", statusLabel: 'On Desktop', bgClass: 'onlineStatus' },
-    { name: "Eva Green", extension: "105", statusLabel: 'Out To Lunch', bgClass: 'onlineStatus bg-danger' },
-    { name: "Frank Black", extension: "106", statusLabel: 'Appear Offline', bgClass: 'onlineStatus bg-secondary' },
-    { name: "Grace Lee", extension: "107", statusLabel: 'Be Right Back', bgClass: 'onlineStatus bg-danger' },
-    { name: "Henry Adams", extension: "108", statusLabel: 'Stepped Out', bgClass: 'onlineStatus bg-danger' },
-    { name: "Iris Turner", extension: "109", statusLabel: 'Busy', bgClass: 'onlineStatus bg-danger' },
-    { name: "Jack Wilson", extension: "110", statusLabel: 'On Desktop', bgClass: 'onlineStatus' }
-];
-
-
-exports.OtherStreamsContactsData = [
-    { name: "Liam Brown", extension: "201", statusLabel: 'On Desktop', bgClass: 'onlineStatus' },
-    { name: "Mia Davis", extension: "202", statusLabel: 'Busy', bgClass: 'onlineStatus bg-danger' },
-    { name: "Noah Miller", extension: "203", statusLabel: 'Out To Lunch', bgClass: 'onlineStatus bg-danger' },
-    { name: "Olivia Wilson", extension: "204", statusLabel: 'Stepped Out', bgClass: 'onlineStatus bg-danger' },
-    { name: "Emma Moore", extension: "205", statusLabel: 'Be Right Back', bgClass: 'onlineStatus bg-danger' },
-    { name: "Ava Taylor", extension: "206", statusLabel: 'Appear Offline', bgClass: 'onlineStatus bg-secondary' },
-    { name: "Sophia Anderson", extension: "207", statusLabel: 'Not At My Desk', bgClass: 'onlineStatus bg-danger' },
-    { name: "Jackson Thomas", extension: "208", statusLabel: 'On Desktop', bgClass: 'onlineStatus' },
-    { name: "Lucas Jackson", extension: "209", statusLabel: 'Busy', bgClass: 'onlineStatus bg-danger' },
-    { name: "Amelia White", extension: "210", statusLabel: 'On Desktop', bgClass: 'onlineStatus' }
-];
-
-
-exports.GlobalContactsData = [
-    { name: "John Smith" },
-    { name: "Liam O'Connor" },
-    { name: "Sofia Garcia" },
-    { name: "Aisha Khan" },
-    { name: "Hiroshi Tanaka" },
-    { name: "Fatima Al-Sayed" },
-    { name: "Carlos Fernández" },
-    { name: "Zhang Wei" },
-    { name: "Nina Müller" },
-    { name: "Arjun Patel" }
-];
-
-
-exports.allData = [
-    { name: "Alice Smith", extension: "101", phoneNumber: "5550101010" },
-    { name: "Bob Johnson", extension: "102", phoneNumber: "5550101020" },
-    { name: "Charlie Brown", extension: "103", phoneNumber: "5550101030" },
-    { name: "Dana White", extension: "104", phoneNumber: "5550101040" },
-    { name: "Eva Green", extension: "105", phoneNumber: "5550101050" },
-    { name: "Frank Black", extension: "106", phoneNumber: "5550101060" },
-    { name: "Grace Lee", extension: "107", phoneNumber: "5550101070" },
-    { name: "Henry Adams", extension: "108", phoneNumber: "5550101080" },
-    { name: "Iris Turner", extension: "109", phoneNumber: "5550101090" },
-    { name: "Jack Wilson", extension: "110", phoneNumber: "5550101100" }
-];
+exports.ALLOWD_MMS_TYPES = "image/*,audio/*,video/*";
 
 
 exports.SearchReasultDataTest = [

@@ -12,6 +12,7 @@ import DIDComponent from './components/sms/DIDComponent';
 import ChatsView from './components/chats/Chats';
 import DarkMode from './components/utils/DarkMode';
 import UsersComponent from './components/sms/UsersComponent';
+import SoftPhone from './views/softphone/SoftPhone';
 
 function App() {
   return (
@@ -38,13 +39,14 @@ function App() {
       <Router>
         <Routes>
 
-          <Route path="/LoginSuccess" element={<Navigate to="/login" />} />
+          <Route path="/LoginSuccess" element={<Login />} />
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path='/login' element={<Login />} />
           <Route path='/home' element={<HomePage />} />
           <Route path='/auth' element={<AuthCode />} />
           <Route path='/didcomponent' element={<DIDComponent />} />
           <Route path='/chat' element={<ChatsView />} />
+          <Route path='/softphone' element={<SoftPhone />} />
         </Routes>
       </Router>
     </div>

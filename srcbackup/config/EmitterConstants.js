@@ -1,7 +1,0 @@
-exports.EMITT_ON_IM_CONNECTED = "on_im_connected"
-exports.EMMIT_ON_SMS_SETTINGS_RECEIVED = "on_sms_settings_received"
-exports.EMMIT_ON_SMS_GROUPS_RECEIVED = "on_sms_groups_received"
-exports.EMMIT_ON_SMS_GROUP_DIDS_RECEIVED = "on_sms_group_dids_received"
-exports.EMMIT_ON_SMS_MESSAGES_RECEIVED = "on_sms_messages_received"
-exports.EMMIT_ON_UPLOAD_PERCENTAGE = "on_upload_percentage"
-exports.EMMIT_ON_CONTACTS_RECEIVED = "on_contacts_received"

@@ -43,9 +43,15 @@ class ContactsHandler {
         let contact_name = phnumber;
         try {
 
+
             var imported_contacts_data = MessageHandler.getContacts(Constants.REQ_CONTACTS_TAB_TYPE.IMPORTED_CONTACTS * 1);
 
             //onsole.log(TAG + "[getMatchedContactName] imported_contacts_data length :: " + imported_contacts_data.length + " :: phnumber :: " + phnumber);
+
+            if (imported_contacts_data.length == 0) {
+
+                return contact_name;
+            }
 
             phnumber = phnumber * 1;
 
@@ -101,6 +107,57 @@ class ContactsHandler {
         }
 
         return contact_name;
+    }
+
+    getDisplayName(strUser) {
+
+        let useName = strUser
+        try {
+
+            if (Utils.isNumeric(strUser)) {
+
+                useName = this.getMatchedContactName(strUser);
+            } else {
+
+                const loggedUser = localStorage.getItem(Params.WS_LOGIN_USER)
+
+                if (loggedUser === strUser) {
+                    return "You"
+                }
+
+                useName = this.getCompanyContactName(strUser)
+
+            }
+
+        } catch (e) {
+            console.log(TAG + '[getMatchContactName] Error  -------- :: ' + e);
+        }
+
+        return useName
+    }
+
+    getCompanyContactName(strUser) {
+
+        let contactName = strUser;
+        try {
+
+            var companyContactList = MessageHandler.getContacts(Constants.REQ_CONTACTS_TAB_TYPE.COMPANY_CONTACTS * 1);
+            var otherContactList = MessageHandler.getContacts(Constants.REQ_CONTACTS_TAB_TYPE.OTHER_STREAMS_CONTACTS * 1);
+
+            companyContactList = [companyContactList, ...otherContactList]
+
+            let contactObj = companyContactList.find(contact => contact.buddyid === strUser)
+
+            if (contactObj) {
+                contactName = this.getUserName(contactObj)
+            }
+
+        } catch (e) {
+            console.log(TAG + '[getMatchContactName] Error  -------- :: ' + e);
+        }
+
+        return contactName
+
     }
 }
 

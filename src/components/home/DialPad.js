@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { allData } from "../../config/Constants";
 import { MDBCard, MDBCardHeader, MDBIcon } from "mdb-react-ui-kit";
 import { Enter, Profile } from "../../assets/images";
 import { isIOS, isAndroid, isMobile } from 'react-device-detect';
@@ -7,6 +6,7 @@ import { isIOS, isAndroid, isMobile } from 'react-device-detect';
 import Constants from "../../config/Constants"
 import { showToast } from '../../views/home/ToastView'
 import SettingsHandler from '../../classes/settings/SettingsHandler'
+import Uitls from "../../classes/utils/util"
 
 let TAG = "[DialPad.js]."
 
@@ -26,6 +26,14 @@ const DialPadKeys = ({ onNumberClick }) => {
         { number: "#", letters: "" },
     ];
 
+    const openNewWindow = () => {
+        const url = 'http://localhost:3000/softphone'; // Replace with your desired URL
+        const windowFeatures = 'width=360,height=580,resizable=no'; // Disable resizing
+        window.open(url, '_blank', windowFeatures);
+    };
+
+
+
     return (
         <div className="dialpad-container">
             <div className="dialpad-grid">
@@ -36,7 +44,7 @@ const DialPadKeys = ({ onNumberClick }) => {
                     </button>
                 ))}
             </div>
-            <button className="dialpad-call-button">
+            <button className="dialpad-call-button" onClick={openNewWindow}>
                 <i className="fas fa-phone"></i>
             </button>
         </div>
@@ -77,84 +85,134 @@ const DialPad = ({ dailpadNumberClick, onClickSMSDID, onDialSMSFromDialPad }) =>
     const primaryDID = localStorage.getItem(Constants.WS_KEY_SMS_ALWAYS_USE_DID);
 
     // Filter the members based on inputValue
-    const filteredMembers = allData.filter(member =>
+    /*const filteredMembers = allData.filter(member =>
         member.name.toLowerCase().includes(inputValue.toLowerCase()) ||
         member.phoneNumber.includes(inputValue) ||
         member.extension.includes(inputValue)
-    );
+    );*/
 
     // Handle number click from the dial pad
     const handleNumberClick = (number) => {
-        if (inputValue.length === 0) {
-            // First input is from the dial pad
-            setIsFirstInputFromDialPad(true);
+
+        try {
+
+            if (inputValue.length === 0) {
+
+                setIsFirstInputFromDialPad(true);
+            }
+
+            Uitls.playDialPadTones(number);
+
+            setInputValue((prev) => prev + number);
+            setShowDialPad(true); // Ensure dial pad remains visible when clicking
+            inputRef.current.focus(); // Ensure input remains focused
+
+        } catch (e) {
+
+            console.log(TAG + "[handleNumberClick] Error :: " + e);
         }
 
-        setInputValue((prev) => prev + number);
-        setShowDialPad(true); // Ensure dial pad remains visible when clicking
-        inputRef.current.focus(); // Ensure input remains focused
     };
 
-    // Handle keyboard input
     const handleKeyboardInput = (e) => {
-        if (inputValue.length === 0) {
-            // If the first input is from the keyboard, hide the dial pad
-            setIsFirstInputFromDialPad(false);
-            setShowDialPad(false);
-        }
 
-        setInputValue(e.target.value);
+        try {
+
+            if (inputValue.length === 0) {
+                // If the first input is from the keyboard, hide the dial pad
+                setIsFirstInputFromDialPad(false);
+                setShowDialPad(false);
+            }
+
+            setInputValue(e.target.value);
+
+        } catch (e) {
+
+            console.log(TAG + "[handleKeyboardInput] Error :: " + e);
+        }
     };
 
-    // Handle backspace functionality
+
     const handleBackspace = () => {
-        setInputValue((prev) => prev.slice(0, -1)); // Remove the last character
-        if (inputValue.length === 1) {
-            // If input becomes empty, reset the dial pad visibility
-            setShowDialPad(true);
-            setIsFirstInputFromDialPad(false); // Reset the input tracking
+
+        try {
+
+            setInputValue((prev) => prev.slice(0, -1)); // Remove the last character
+
+            if (inputValue.length === 1) {
+                // If input becomes empty, reset the dial pad visibility
+                setShowDialPad(true);
+                setIsFirstInputFromDialPad(false); // Reset the input tracking
+            }
+
+        } catch (e) {
+
+            console.log(TAG + "[handleBackspace] Error :: " + e);
         }
     };
 
     // Show dial pad if input is empty
     useEffect(() => {
-        if (inputValue.length === 0) {
-            setShowDialPad(true); // Show the dial pad when input is cleared
+
+        try {
+
+            console.log(TAG + "[useEffect] Default ---- :: ");
+
+            if (inputValue.length === 0) {
+
+                setShowDialPad(true);
+            }
+        } catch (e) {
+
+            console.log(TAG + "[useEffect] Error :: " + e);
         }
+
     }, [inputValue]);
 
-    // Handle keyboard key press (for logging)
+
     const handleKeyPress = (e) => {
+
         console.log(`Keyboard Key Clicked: ${e.key}`); // Log keyboard input
     };
 
     const onClickSMS = () => {
 
-        console.log(TAG + "[onClickSMS] inputValue :: " + inputValue)
+        try {
 
-        if (!inputValue || inputValue === '' || inputValue.length < 3) {
-            showToast('Please enter valid name or number')
-            return
+            console.log(TAG + "[onClickSMS] inputValue :: " + inputValue)
+
+            if (!inputValue || inputValue === '' || inputValue.length < 3) {
+                showToast('Please enter valid name or number')
+                return
+            }
+
+            let phnumber = (inputValue * 1)
+            let userData = {
+
+                'isNavigatedFromDialpad': true,
+                'phnumber': phnumber
+            }
+
+            if (isMobile || isIOS || isAndroid) {
+
+                // navigate('/chat', { state: { userData } });
+            } else {
+
+                onDialSMSFromDialPad(userData)
+                onClickSMSDID(userData);
+            }
+
+            setShowDialPad(false)
+            setIsFirstInputFromDialPad(false);
+            setInputValue('')
+
+            SettingsHandler.loadSMSMessages('', phnumber, Constants.SMS_CHAT_TYPES.WS_ONE_TO_ONE_SMS, {});
+
+        } catch (e) {
+
+            console.log(TAG + "[onClickSMS] Error :: " + e);
         }
 
-        let phnumber = (inputValue * 1)
-        let userData = {
-            'isNavigatedFromDialpad': true,
-            'phnumber': phnumber
-        }
-        if (isMobile || isIOS || isAndroid) {
-
-            // navigate('/chat', { state: { userData } });
-        } else {
-
-            onDialSMSFromDialPad(userData)
-            onClickSMSDID(userData);
-        }
-
-        setShowDialPad(false)
-        setIsFirstInputFromDialPad(false);
-        setInputValue('')
-        SettingsHandler.loadSMSMessages('', phnumber, Constants.SMS_CHAT_TYPES.WS_ONE_TO_ONE_SMS, {});
     }
 
 
@@ -166,6 +224,15 @@ const DialPad = ({ dailpadNumberClick, onClickSMSDID, onDialSMSFromDialPad }) =>
                     <div className='tabsHeader'>
                         Dialpad</div>
                     <div className="cursor-pointer" title="SMS" onClick={onClickSMS}><MDBIcon fas icon="comment-alt" /></div>
+
+                    {
+                        localStorage.getItem(Constants.WS_KEY_SMS_ENABLED_STATUS) === true ?
+
+                            (<div className="cursor-pointer" title="SMS" onClick={onClickSMS}><MDBIcon fas icon="comment-alt" /></div>)
+                            :
+                            ("")
+                    }
+
                 </MDBCardHeader>
             </MDBCard>
 
@@ -186,6 +253,7 @@ const DialPad = ({ dailpadNumberClick, onClickSMSDID, onDialSMSFromDialPad }) =>
                         onKeyDown={handleKeyPress} // Log key press
                     />
 
+                    {/* Show backspace icon only if there's input */}
                     {inputValue.length > 0 && (
                         <MDBIcon
                             fas
@@ -202,7 +270,7 @@ const DialPad = ({ dailpadNumberClick, onClickSMSDID, onDialSMSFromDialPad }) =>
                 {/* Dial Pad */}
                 {/* Dial Pad */}
                 {showDialPad ? (
-                    <div className="mt-5">
+                    <div className="mt-4">
                         <DialPadKeys onNumberClick={handleNumberClick} />
                     </div>
                 ) :
@@ -226,13 +294,13 @@ const DialPad = ({ dailpadNumberClick, onClickSMSDID, onDialSMSFromDialPad }) =>
                                 </div>
                             </div>
                             <div className="w-100">
-                                {filteredMembers.map((member, index) => {
+                                {/* {filteredMembers.map((member, index) => {
                                     return (
                                         <>
                                             <SearchReasult profileImage={Profile} name={member.name} extension={member.extension} number={member.phoneNumber} onClick={() => dailpadNumberClick(member)} />
                                         </>
                                     )
-                                })}
+                                })} */}
                             </div>
                         </div>
                     </>}

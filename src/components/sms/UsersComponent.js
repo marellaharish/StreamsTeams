@@ -20,10 +20,6 @@ import IMConstants from '../../config/IMConstants';
 import DialPad from '../home/DialPad'
 import Contacts from '../home/Contacts'
 import ContactsHandler from "../../classes/contacts/ContactsHandler"
-import More from '../home/More'
-
-let selectedTabIndex = Constants.REQ_SMS_TAB_TYPE.ALL_SMS;
-let loadMoreStatus = false;
 
 let TAG = "[UsersComponent].";
 const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividualSMS, dailpadNumberClick }) => {
@@ -56,6 +52,8 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
     const containerRef = useRef(null);
     const messagesRef = useRef([]);
+    const selectedTabIndex = useRef(Constants.REQ_SMS_TAB_TYPE.ALL_SMS)
+    const loadMoreStatus = useRef(false)
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -81,7 +79,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
             setSMSEnableStatus(sms_enable_status);
 
             let assigned_did_length = MessageHandler.getSMSAssignedDIDsList();
-            let sms_data_length = MessageHandler.getSMSData(selectedTabIndex).length;
+            let sms_data_length = MessageHandler.getSMSData(selectedTabIndex.current).length;
             let imported_contacts_length = MessageHandler.getContacts(Constants.REQ_CONTACTS_TAB_TYPE.IMPORTED_CONTACTS).length;
 
             console.log(TAG + "[UsersComponents].useEffect() in statement -[]--- sms_enable_status :: " + sms_enable_status + " :: assigned_did_length :: " + assigned_did_length + " :: sms_data_length :: " + sms_data_length + " :: imported_contacts_length :: " + imported_contacts_length);
@@ -89,13 +87,14 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
             if (assigned_did_length == 0) {
 
                 console.log(TAG + "[UsersComponents].useEffect() in statement -[] SENDING REQ FOR ASIGNED DIDS");
-                SettingsHandler.loadSMSGroupAssignedDIDList();
+                SettingsHandler.loadSMSGroupAssignedDIDList(null);
             }
 
             if (sms_data_length == 0) {
 
                 console.log(TAG + "[UsersComponents].useEffect() in statement -[] SENDING REQ FOR SMS DATA");
-                SettingsHandler.loadSMSData(searchString, selectedTabIndex);
+                SettingsHandler.loadSMSData(searchString, selectedTabIndex.current);
+                SettingsHandler.loadSMSData(searchString, Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD);
             } else {
 
                 //This is for Mobiles. When we come back to origin window this method will be called. So reset the messages array.
@@ -175,6 +174,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
             evntEmitter.removeAllListeners(EmitterConstants.EMMIT_ON_SMS_GROUPS_RECEIVED);
             evntEmitter.removeAllListeners(EmitterConstants.EMMIT_ON_SMS_SETTINGS_RECEIVED);
+            evntEmitter.removeAllListeners(EmitterConstants.EMMIT_ON_SEARCH_MESSAGE_BUDDY_CLICKED);
         } catch (e) {
 
             console.log('[unRegisterEmitters] Error :: ' + e);
@@ -189,6 +189,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
             evntEmitter.on(EmitterConstants.EMMIT_ON_SMS_GROUPS_RECEIVED, reloadSMSGroups);
             evntEmitter.on(EmitterConstants.EMMIT_ON_SMS_SETTINGS_RECEIVED, updateSMSView);
+            evntEmitter.on(EmitterConstants.EMMIT_ON_SEARCH_MESSAGE_BUDDY_CLICKED, searchBuddyClicked);
 
         } catch (e) {
 
@@ -238,39 +239,39 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
             if (value == 'all') {
 
                 //buddy_data = allSMSList;
-                selectedTabIndex = Constants.REQ_SMS_TAB_TYPE.ALL_SMS;
+                selectedTabIndex.current = Constants.REQ_SMS_TAB_TYPE.ALL_SMS;
 
                 //Send server request to load data and assign the response to the corresponding state variable
 
             } else if (value == 'indi') {
 
                 //buddy_data = smsIndividualList;
-                selectedTabIndex = Constants.REQ_SMS_TAB_TYPE.INDIVIDUAL_SMS;
+                selectedTabIndex.current = Constants.REQ_SMS_TAB_TYPE.INDIVIDUAL_SMS;
 
                 //Send server request to load data and assign the response to the corresponding state variable
 
             } else if (value == 'group') {
 
                 //buddy_data = allSMSList;
-                selectedTabIndex = Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS;
+                selectedTabIndex.current = Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS;
 
                 //Send server request to load data and assign the response to the corresponding state variable
 
             } else if (value == 'unread') {
 
                 //Send server request to load data and assign the response to the corresponding state variable
-                selectedTabIndex = Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD;
+                selectedTabIndex.current = Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD;
             }
 
-            var buddy_data = MessageHandler.getSMSData(selectedTabIndex);
+            var buddy_data = MessageHandler.getSMSData(selectedTabIndex.current);
 
             if (buddy_data.length == 0) {
 
                 setLoadingNew(true);
 
-                console.log("[handleTabSelect] ---------- Send server request to load data. Tab Index :: " + selectedTabIndex);
+                console.log("[handleTabSelect] ---------- Send server request to load data. Tab Index :: " + selectedTabIndex.current);
 
-                SettingsHandler.loadSMSData("", selectedTabIndex);
+                SettingsHandler.loadSMSData("", selectedTabIndex.current);
             }
 
             setFinalData(buddy_data);
@@ -295,6 +296,18 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
         }
     }
 
+    const searchBuddyClicked = (search_data) => {
+        try {
+
+            console.log("searchBuddyClicked :: " + JSON.stringify(search_data));
+
+            onClickSMSItem(search_data);
+
+        } catch (e) {
+            console.log(TAG + '[searchBuddyClicked] Error :: ' + e);
+        }
+    }
+
     const reloadSMSGroups = (data) => {
 
         try {
@@ -304,18 +317,19 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
             if (data && data.noData) {//If there is not data in Server DB as well we will get empty response.
 
                 setLoading(false);
-                loadMoreStatus = false;
+                setLoadingNew(false);
+                loadMoreStatus.current = false;
 
                 return;
             }
 
-            if (data) {
+            if (data && data.type == Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD) {
 
-                setIndividualUnreadCount(data.INDIVIDUAL_UNREAD_COUNT);
-                setallUnreadCount(data.ALL_UNREAD_COUNT);
+                //setIndividualUnreadCount(data.INDIVIDUAL_UNREAD_COUNT);
+                //setallUnreadCount(data.ALL_UNREAD_COUNT);
             }
 
-            var groups = MessageHandler.getSMSData(selectedTabIndex);
+            var groups = MessageHandler.getSMSData(selectedTabIndex.current);
 
             console.log("[reloadSMSGroups] groups --- " + groups.length);
 
@@ -326,8 +340,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
             setFinalData([...groups]);
 
             setLoading(false);
-            loadMoreStatus = false;
-
+            loadMoreStatus.current = false;
 
         } catch (e) {
 
@@ -345,7 +358,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
             let group_code;
             let selectedBuddyId;
 
-            if (selectedTabIndex === Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS) {//Group tab selected.
+            if (selectedTabIndex.current === Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS) {//Group tab selected.
 
                 group_code = member.code;
                 selectedBuddyId = group_code
@@ -409,13 +422,13 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
             setLoading(true);//This is to show the loading indicator for load more data
 
-            if (loadMoreStatus == true) {
+            if (loadMoreStatus.current == true) {
                 return;
             }
 
-            loadMoreStatus = true;
+            loadMoreStatus.current = true;
 
-            SettingsHandler.loadSMSData(searchString, selectedTabIndex);
+            SettingsHandler.loadSMSData(searchString, selectedTabIndex.current);
 
         } catch (e) {
 
@@ -430,7 +443,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
             console.log("[handleScroll] -------------");
 
-            if (loadMoreStatus == true) {
+            if (loadMoreStatus.current == true) {
 
                 return;
             }
@@ -475,7 +488,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                 console.log("Enter key was pressed!");
 
                 //send server request
-                SettingsHandler.loadSMSData(searchString, selectedTabIndex);
+                //SettingsHandler.loadSMSData(searchString, selectedTabIndex);
             }
 
         } catch (e) {
@@ -515,9 +528,9 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                     console.log('data :: ' + JSON.stringify(data) + " :: mesage :: " + data.message);
 
                     // This works fro All and Individual SMS tabs. It don't have title attribute.
-                    if (data.phnumber) {
+                    if ((data.phnumber || data.display_name) && !data.title) {
 
-                        found_message = String(data.phnumber).includes(searchKeyWord);
+                        found_message = String(data.phnumber).includes(searchKeyWord) || String(data.display_name).toLowerCase().includes(searchKeyWord.toLowerCase());;//String(data.phnumber).includes(searchKeyWord);
 
                         if (!found_message) {
 
@@ -535,7 +548,6 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
                         found_message = false;
                     }
-
 
                     return found_message;
                 });
@@ -557,6 +569,18 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
             console.log('[startSearch] Error :: ' + e);
         }
     }
+
+    const handleClearInput = () => {
+        try {
+
+            setSearchString('');
+            var dataList = MessageHandler.getSMSData(selectedTabIndex.current);
+            setFinalData(dataList);
+
+        } catch (e) {
+            console.log("[handleClearInput] Error :: " + e);
+        };
+    };
 
     /// For SMS popup - Starts
     const showPopUpToEnterFromToNumbers = (group_details, e) => {
@@ -643,7 +667,8 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
     return (
         <>
-            <div className='w-100'>
+            <div className='shadow-0'>
+
                 {isMobile && (
                     <>
 
@@ -688,9 +713,11 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                     </>
                 )}
 
+
                 <MDBTabsContent>
                     <MDBTabsPane open={selectMainTab === 'sms'}>
-                        <div className="pt-0">
+                        <div className="pt-0 userComponentbg">
+
                             {!isMobile &&
                                 <MDBCard className='shadow-0 bg-transparent'>
                                     <MDBCardHeader className=' border-0'>
@@ -699,15 +726,24 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                                 </MDBCard>
                             }
 
-
                             <div className="position-relative userSearch d-flex align-items-center justify-content-between mt-2 px-2">
-                                <input placeholder='Search' onChange={(e) => { startSearch(e) }} onKeyDown={onSearchKeyDown} />
+                                <input value={searchString} placeholder='Search' onChange={(e) => { startSearch(e) }} onKeyDown={onSearchKeyDown} />
                                 <img src={Iconsearch} alt="" className='inputIcon' />
 
+                                {searchString &&
+                                    (
+                                        <>
+                                            <div onClick={handleClearInput} className='py-1 pe-1 cursor-pointer inputIconEnd'>
+                                                <MDBIcon fas icon="times" className='' />
+                                            </div>
+                                        </>
+                                    )
+                                }
+
                             </div>
-                            <div className="d-flex pt-2 mx-2 flex-wrap">
+                            <div className="d-flex pt-2 mx-2">
                                 <MDBChip className={`${selectedTab == 'all' ? "active" : ""}`} onClick={() => handleTabSelect('all')} active={selectedTab === 'all'} >All  {allUnreadCount > 0 && <span>({allUnreadCount + individualUnreadCount})</span>}</MDBChip>
-                                <MDBChip className={`${selectedTab == 'indi' ? "active" : ""}`} onClick={() => handleTabSelect('indi')} active={selectedTab === 'indi'}>Individual {individualUnreadCount > 0 && <span>({individualUnreadCount})</span>}</MDBChip>
+                                <MDBChip className={`${selectedTab == 'indi' ? "active" : ""}`} onClick={() => handleTabSelect('indi')} active={selectedTab === 'indi'}>Individual {individualUnreadCount > 0 && <span> ({individualUnreadCount})</span>}</MDBChip>
                                 <MDBChip className={`${selectedTab == 'group' ? "active" : ""}`} onClick={() => handleTabSelect('group')} active={selectedTab === 'group'}>Group</MDBChip>
                                 <MDBChip className={`${selectedTab == 'unread' ? "active" : ""}`} onClick={() => handleTabSelect('unread')} active={selectedTab === 'unread'}>Unread</MDBChip>
                             </div>
@@ -740,9 +776,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                                                 :
                                                 (final_data.map((member, index) => {
 
-                                                    let display_name = ContactsHandler.getMatchedContactName(member.phnumber);
-
-                                                    console.log('[final_data] member ---- index : ' + index + ' :: phnumber :: ' + member.phnumber + " :: display_name :: " + display_name + " :: member :: " + JSON.stringify(member));
+                                                    //console.log('[final_data] member ---- index : ' + index + ' :: phnumber :: ' + member.phnumber + " :: member :: " + JSON.stringify(member));
 
                                                     let selectedItem;
                                                     let msg;
@@ -754,18 +788,32 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
                                                     //console.log("[final_data] member --2222-- index : " + index + " :: selectedTabIndex :: " + selectedTabIndex + " :: msg :: " + msg + " :: message_data :: " + JSON.stringify(message_data) + " :: member :: " + JSON.stringify(member));
 
-                                                    if (selectedTabIndex === Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS) {
+                                                    if (selectedTabIndex.current === Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS) {//Groups Tab
 
                                                         isHighlight = selectedGroup && ((member.code * 1) === (selectedGroup * 1))
                                                         //selectedItem = member.code
-                                                    } else if (message_data.group_code) {
-
-                                                        let sid = message_data.group_code + '_' + member.phnumber
-                                                        isHighlight = selectedGroup && (selectedGroup === sid)
-                                                        //selectedItem = message_data.group_code;
                                                     } else {
 
-                                                        isHighlight = selectedGroup && ((member.phnumber * 1) === (selectedGroup * 1))
+                                                        let importedContactsLength = MessageHandler.getContacts(Constants.REQ_CONTACTS_TAB_TYPE.IMPORTED_CONTACTS * 1).length;
+
+                                                        let display_name = member.phnumber;
+
+                                                        if (importedContactsLength > 0) {
+
+                                                            display_name = ContactsHandler.getMatchedContactName(member.phnumber)
+                                                        }
+
+                                                        member.display_name = display_name;
+
+                                                        if (message_data.group_code) {//All tab will have Group SMS messages
+
+                                                            let sid = message_data.group_code + '_' + member.phnumber
+                                                            isHighlight = selectedGroup && (selectedGroup === sid)
+                                                            //selectedItem = message_data.group_code;
+                                                        } else {
+
+                                                            isHighlight = selectedGroup && ((member.phnumber * 1) === (selectedGroup * 1))
+                                                        }
                                                     }
 
                                                     return (
@@ -784,12 +832,12 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                                                                     <p className='ChatUserName'>
                                                                         {(() => {
 
-                                                                            return selectedTabIndex === Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS
+                                                                            return selectedTabIndex.current === Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS
                                                                                 ? member.title
                                                                                 :
                                                                                 (message_data && message_data.group_code)
-                                                                                    ? `${display_name} [${message_data.group_title}]`
-                                                                                    : display_name;
+                                                                                    ? `${member.display_name} [${message_data.group_title}]`
+                                                                                    : member.display_name;
                                                                         })()}
                                                                     </p>
                                                                     <div className='d-flex flex-row align-items-center'>
@@ -798,11 +846,11 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                                                                             {
                                                                                 (() => {
 
-                                                                                    let message_time = selectedTabIndex == Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS
+                                                                                    let message_time = selectedTabIndex.current == Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS
                                                                                         ? member.createdon
                                                                                         : member.latest_time;
 
-                                                                                    return Utils.getFormatedDate(message_time, Constants.DATE_FORMATS.WS_GROUP_DID_DATE)
+                                                                                    return Utils.getFormatedDate(message_time, Constants.DATE_FORMATS.WS_CHAT_RECENTS)
                                                                                 })()
                                                                             }
                                                                         </p>
@@ -820,7 +868,9 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
                                                                 <div className='d-flex flex-row align-items-center justify-content-between'>
                                                                     <p className='ellipsis'>
-                                                                        {selectedTabIndex == Constants.REQ_SMS_TAB_TYPE.INDIVIDUAL_SMS || selectedTabIndex == Constants.REQ_SMS_TAB_TYPE.ALL_SMS ? msg : ""}
+                                                                        {selectedTabIndex.current == Constants.REQ_SMS_TAB_TYPE.INDIVIDUAL_SMS ||
+                                                                            selectedTabIndex.current == Constants.REQ_SMS_TAB_TYPE.ALL_SMS ||
+                                                                            selectedTabIndex.current == Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD ? msg : ""}
                                                                     </p>
                                                                     {member.unread_count > 0 && (
 
@@ -835,7 +885,7 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
                                                 })
                                                 )
                                         )}
-                                    {!loading && (
+                                    {loading && (
 
                                         <div className="loadContainer pb-3 text-center">
                                             <MDBIcon className='loading-icon' fas icon='spinner' size='2x' spin />
@@ -863,21 +913,16 @@ const UsersComponent = ({ onLoad, onClickGroup, onClickSMSDID, onSelectIndividua
 
                         </div>
                     </MDBTabsPane>
-                    <MDBTabsPane open={selectMainTab === 'Contacts'}>
-                        <Contacts contacts_tab_selection={true} />
+                    <MDBTabsPane>
+
+                        {selectMainTab === 'Contacts' && <Contacts contacts_tab_selection={true} />}
                     </MDBTabsPane>
+
                     <MDBTabsPane open={selectMainTab === 'dialpad'}>
                         <DialPad dailpadNumberClick={dailpadNumberClick}
                             onClickSMSDID={onClickSMSDID}
                             onDialSMSFromDialPad={onDialSMSFromDialPad} />
                     </MDBTabsPane>
-                    {isMobile &&
-                        <>
-                            <MDBTabsPane open={selectMainTab === 'more'}>
-                                <More />
-                            </MDBTabsPane>
-                        </>}
-
 
                 </MDBTabsContent>
             </div>

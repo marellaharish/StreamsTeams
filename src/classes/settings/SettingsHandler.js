@@ -1,15 +1,15 @@
-import Config from "../../config/Config"
-import Constants from "../../config/Constants"
-import EmitterConstants from '../../config/EmitterConstants'
-import Params from "../../config/Params"
 import URLParams from "../../config/URLParams"
-import MessageHandler from "../chat/MessageHandler"
-import evntEmitter from "../utils/EvntEmitter"
 import ServerHandler from "../utils/ServerHandler"
+import Constants from "../../config/Constants"
+import Config from "../../config/Config"
+import MessageHandler from "../chat/MessageHandler"
+import Params from "../../config/Params"
+import EmitterConstants from '../../config/EmitterConstants'
+import evntEmitter from "../utils/EvntEmitter"
+import Utils from "../utils/util"
 
 let TAG = "[SettingsHanlder]."
 class SettingsHandler {
-
 
     loadUserSMSDIDSettings() {
 
@@ -67,7 +67,7 @@ class SettingsHandler {
             console.log("[StreamsHandler].onReceiveUserSMSDIDSettings() ===11==== enable_status :: " + enable_status + " :: persistent_did :: " + persistent_did + " :: did_list :: " + JSON.stringify(did_list));
 
             //localStorage.setItem(Constants.WS_KEY_SMS_DONT_ASK_STATUS, send_alert_status);
-            if (persistent_did && persistent_did.length > 0) {
+            if (persistent_did && (persistent_did.length * 1) > 0) {
 
                 localStorage.setItem(Constants.WS_KEY_SMS_ALWAYS_USE_DID, persistent_did);
             } else {
@@ -268,16 +268,19 @@ class SettingsHandler {
         }
     }
 
+    /*
     loadSMSEnableDisableSettings() {
 
         var self = this;
         try {
 
-            let params = {};
+            let params = {
+                siteid: localStorage.getItem(Params.WS_SITE_ID)
+            };
 
             let extra_data = {
 
-                req_type: Constants.REQ_TYPE.REQ_SMS_ENABLE_SETTINGS,
+                req_type: Constants.REQ_TYPE.SMS_ENABLE_SETTINGS,
             }
 
             console.log('[loadSMSEnableDisableSettings] params ---- ' + JSON.stringify(params));
@@ -359,9 +362,9 @@ class SettingsHandler {
 
             console.log('[onReceiveSMSEnableDisableSettings] Error  -------- :: ' + e);
         }
-    }
+    }*/
 
-    loadSMSGroupAssignedDIDList() {
+    loadSMSGroupAssignedDIDList(extra_info) {
         var self = this;
         try {
 
@@ -381,6 +384,7 @@ class SettingsHandler {
                 .then((data, extra_data) => {
 
                     console.log(TAG + '[loadSMSGroupAssignedDIDList] response_data :: ' + JSON.stringify(data.response_data) + " :: extra_data :: " + JSON.stringify(data.extra_data));
+
                     self.onReceiveResponse(data.response_data, data.extra_data);
 
                 })
@@ -388,8 +392,6 @@ class SettingsHandler {
 
                     self.onGotErrorResponse(error, extra_data);
                 });
-
-
 
         } catch (e) {
             console.log('[loadSMSGroupAssignedDIDList] Error  -------- :: ' + e);
@@ -409,14 +411,36 @@ class SettingsHandler {
 
                     console.log(TAG + "[onReceiveSMSGroupAssignedDIDList] code :: " + data.code + " :: data :: " + JSON.stringify(data));
 
+                    MessageHandler.clearAssignedGroupsDIDList();
                     MessageHandler.addSMSAssignedGroupsDIDList(data.code, data);
                 }
 
                 console.log(TAG + "[onReceiveSMSGroupAssignedDIDList] code :: " + data.code + " :: numbers :: " + MessageHandler.getSMSAssignedGroupsDIDList(data.code));
             });
 
+
+            //Get the group_code from extra_data
+            /*if (group_code &&  (group_code * 1) > 1) {
+
+                self.updateGroupNamesOnDynamicEvent(data);
+            }*/
+
         } catch (e) {
             console.log('[onReceiveSMSGroupAssignedDIDList] Error  -------- :: ' + e);
+        }
+    }
+
+    updateGroupNamesOnDynamicEvent(data) {
+
+        try {
+
+            //prepare Groups array as like tabe type 3. Prepare Groups data in Arrary form as like tab 3 and stor in map.
+            MessageHandler.addSMSData(data, Constants.REQ_SMS_TAB_TYPE.SMS_GROUPS);
+
+            evntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_GROUPS_RECEIVED, {});
+
+        } catch (e) {
+            console.log(TAG + '[updateGroupNamesOnDynamicEvent] Error  -------- :: ' + e);
         }
     }
 
@@ -440,7 +464,8 @@ class SettingsHandler {
                 archiveid: localStorage.getItem(Params.WS_IM_ARCHIVEID),
                 initialLimit: (type === Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD) ? "" : MessageHandler.getSMSData(type).length,
                 secondLimit: (type === Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD) ? "" : Config.LOAD_MORE_DATA_LIMIT,
-                type: type
+                type: type,
+                userTimeZoneInMins: Utils.getUserTimeZone()
             };
 
             let extra_data = {
@@ -485,11 +510,6 @@ class SettingsHandler {
             let allUnreadCount = 0;
             let individualUnreadCount = 0;
 
-            let message_args = {
-
-                type: extra_data.req_type,
-            };
-
             response_data.map((data, index) => {
 
                 if (extra_data.req_type === Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD) {
@@ -511,6 +531,13 @@ class SettingsHandler {
 
                 MessageHandler.addSMSData(data, (extra_data.req_type * 1));
             });
+
+            let message_args = {
+
+                type: extra_data.req_type,
+                ALL_UNREAD_COUNT: allUnreadCount,
+                INDIVIDUAL_UNREAD_COUNT: individualUnreadCount
+            };
 
             evntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_GROUPS_RECEIVED, message_args);
 
@@ -553,7 +580,8 @@ class SettingsHandler {
                 siteid: localStorage.getItem(Params.WS_SITE_ID), //375865
                 search_key: searchKeyWord,
                 initialLimit: first_limit,
-                secondLimit: Config.LOAD_MORE_DATA_LIMIT
+                secondLimit: Config.LOAD_MORE_DATA_LIMIT,
+                userTimeZoneInMins: Utils.getUserTimeZone()
             };
 
             let extra_data = {
@@ -631,7 +659,7 @@ class SettingsHandler {
         }
     }
 
-    loadSMSMessages(group_id, did, type, extra_info, is_load_more) {
+    loadSMSMessages(smsgid, group_id, did, type, extra_info, is_load_more, scroll_direction) {
 
         var self = this;
         try {
@@ -646,6 +674,9 @@ class SettingsHandler {
                 secondLimit: Config.LOAD_MORE_DATA_LIMIT,
                 type: type,
                 archiveid: localStorage.getItem(Params.WS_IM_ARCHIVEID),
+                userTimeZoneInMins: Utils.getUserTimeZone(),
+                smsgid: smsgid,
+                direction: scroll_direction,
             };
 
             let sid = (group_id && group_id !== '') ? (group_id + "_" + did) : did
@@ -683,6 +714,7 @@ class SettingsHandler {
                 type: type,
                 is_load_more_data_req: load_more,
                 first_limit: first_limit,
+                scroll_direction: scroll_direction
             }
 
             console.log('[loadSMSMessages] params ---- ' + JSON.stringify(params));
@@ -715,14 +747,14 @@ class SettingsHandler {
             if (!response_data.messages) {
 
                 console.log("[onReceiveSMSMessages] NO MESSAGES DATA FOUND -----------");
-                evntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, { "noData": true });
+                evntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, { "noData": true, scroll_direction: extra_data.scroll_direction });
                 return;
             }
 
             if (response_data.messages.length == 0) {
 
                 console.log("[onReceiveSMSMessages] NO DATA FOUND -----------");
-                evntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, { "noData": true });
+                evntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, { "noData": true, scroll_direction: extra_data.scroll_direction });
                 return;
             }
 
@@ -846,7 +878,7 @@ class SettingsHandler {
                 opcode: Constants.API_HANDLER.WS_APIHANDLER_SMS_ALWAYS_USE_DID
             };
 
-            let requestType = URLParams.REQ_SAVE_PERSISTENT_DID
+            let requestType = URLParams.REQ_API_HANDLER
 
             console.log(TAG + '[sendSMSAlwaysUseDIDToAPI]==  url: ' + requestType + ', message_data :: ' + JSON.stringify(message_data));
 
@@ -876,19 +908,18 @@ class SettingsHandler {
         try {
 
             let persistentDID = localStorage.getItem(Constants.WS_KEY_SMS_ALWAYS_USE_DID);
+            let fromDID = data.from
+
             console.log(TAG + "[saveSMSAlwaysUseDetails] data :: " + JSON.stringify(data) + " :: persistentDID :: " + persistentDID);
 
-            if (data.isEnableAlwaysUseDID) {
+            if (persistentDID && (persistentDID * 1 !== fromDID * 1) && !data.isEnableAlwaysUseDID) {
 
-                localStorage.setItem(Constants.WS_KEY_SMS_ALWAYS_USE_DID, data.from);
-                //Send API Server request
-                this.sendSMSAlwaysUseDIDToAPI(data.from, 2);
-            } else {
-
-                localStorage.removeItem(Constants.WS_KEY_SMS_ALWAYS_USE_DID);
-                //send API Server request
-                this.sendSMSAlwaysUseDIDToAPI(persistentDID, 0);
+                //return;
             }
+
+            let save_status = data.isEnableAlwaysUseDID ? 2 : 0;//2-Always is Enalbed, 0- Alwayes is disabled
+
+            this.sendSMSAlwaysUseDIDToAPI(fromDID, save_status);
 
         } catch (e) {
 
@@ -993,6 +1024,249 @@ class SettingsHandler {
         }
     }
 
+    loadUsersNotificationSound() {
+        var self = this;
+        try {
+
+            let archiveId = localStorage.getItem(Params.WS_IM_ARCHIVEID);
+
+            let params = {
+                archiveid: archiveId,
+            };
+
+            let extra_data = {
+                req_type: Constants.REQ_TYPE.LOAD_NOTIFICATION_SOUNDS,
+            }
+
+            ServerHandler.sendServerRequest(URLParams.REQ_NOTIFICATION_SOUNDS, {}, params, URLParams.REQ_GET, extra_data)
+                .then((data, extra_data) => {
+
+                    console.log(TAG + '[loadUsersNotificationSound] response_data :: ' + JSON.stringify(data.response_data) + " :: extra_data :: " + JSON.stringify(data.extra_data));
+                    self.onReceiveResponse(data.response_data, data.extra_data);
+
+                })
+                .catch((error) => {
+                    self.onGotErrorResponse(error, extra_data);
+                });
+
+        } catch (e) {
+            console.log(TAG + '[loadUsersNotificationSound] Error  -------- :: ' + e);
+        }
+    }
+
+    onReceiveNotificationSounds(response_data, extra_data) {
+        var self = this;
+        try {
+            console.log(TAG + "[onReceiveNotificationSounds] ------------  ");
+
+            if (response_data.length == 0) {
+
+                console.log(TAG + "[onReceiveNotificationSounds] NO DATA FOUND -----------");
+                return;
+            }
+
+            let muteNotificationSounds = response_data.mute_notification_sounds[0].notificationpreference;
+            let userEventNotificationSound = response_data.user_event_notification_sound[0].soundfileid;
+            let notificationSoundOnDevices = response_data.notification_sounds_on_devices[0].devicetype;
+            let likeNotificationSounds = response_data.like_notification_sounds[0].likenotificationsetting;
+            let muteNotificationSoundsOnSpecificTimeEnabled = response_data.notification_sounds_on_specific_time[0].date_timesettingsenabled;
+            let muteNotificationSoundsFromTime = response_data.notification_sounds_on_specific_time[0].fromtime;
+            let muteNotificationSoundsToTime = response_data.notification_sounds_on_specific_time[0].totime;
+
+            // console.log("[onReceiveNotificationSounds] :: muteNotificationSounds :: " + JSON.stringify(muteNotificationSounds) + ", userEventNotificationSound :: " + JSON.stringify(userEventNotificationSound) + " , notificationSoundOnDevices :: " + JSON.stringify(notificationSoundOnDevices) + ", likeNotificationSounds :: " + JSON.stringify(likeNotificationSounds) + ", notificationSoundsOnSpecificTime :: " + JSON.stringify(muteNotificationSoundsOnSpecificTime) + ", muteNotificationSoundsFromTime :: " + JSON.stringify(muteNotificationSoundsFromTime) + ", muteNotificationSoundsToTime :: " + JSON.stringify(muteNotificationSoundsToTime));
+
+            //Addind Data 
+            if (muteNotificationSounds) {
+                MessageHandler.addNotificationSounds(Constants.NOTIFICATION_SOUNDS.MUTE_ALL_NOTIFCATION_SOUNDS, muteNotificationSounds);
+            }
+
+            if (userEventNotificationSound) {
+                MessageHandler.addNotificationSounds(Constants.NOTIFICATION_SOUNDS.USER_EVENT_NOTIFICATION_SOUND, userEventNotificationSound);
+            }
+
+            if (notificationSoundOnDevices) {
+                MessageHandler.addNotificationSounds(Constants.NOTIFICATION_SOUNDS.NOTIFICATION_SOUNDS_ON_DEVICES, notificationSoundOnDevices);
+            }
+
+            if (likeNotificationSounds) {
+                MessageHandler.addNotificationSounds(Constants.NOTIFICATION_SOUNDS.LIKE_NOTIFICATION_SOUNDS, likeNotificationSounds);
+            }
+
+            if (muteNotificationSoundsOnSpecificTimeEnabled && muteNotificationSoundsOnSpecificTimeEnabled === 1) {
+
+                let data = {};
+
+                if (muteNotificationSoundsFromTime) {
+                    data.from_time = muteNotificationSoundsFromTime;
+
+                }
+
+                if (muteNotificationSoundsToTime) {
+                    data.to_time = muteNotificationSoundsToTime;
+                }
+
+                MessageHandler.addNotificationSounds(Constants.NOTIFICATION_SOUNDS.MUTE_NOTIFICATION_SOUNDS_ON_SPECIFIC_TIME_ENABLED, data);
+            }
+
+        } catch (e) {
+            console.log(TAG + '[onReceiveNotificationSounds] Error  -------- :: ' + e);
+        }
+    }
+
+    sendRequestForDeleteMessage(params) {
+
+        var self = this;
+        try {
+
+            let extra_data = {
+                req_type: Constants.REQ_TYPE.DELETE_MESSAGE,
+                sid: params.sid,
+                smsgid: params.smsgid
+            };
+
+            let headersData = {
+                opcode: Constants.API_HANDLER.WS_APIHANDLER_DELETE_MESSAGE
+            };
+
+            let requestType = URLParams.REQ_API_HANDLER
+
+            console.log(TAG + '[sendRequestForDeleteMessage]==  url: ' + requestType + ', message_data :: ' + JSON.stringify(params));
+
+
+            ServerHandler.sendApiHandlerRequest(requestType, params, extra_data, headersData, URLParams.REQ_POST)
+                .then(({ data, extra_data }) => {
+
+                    console.log('[sendRequestForDeleteMessage]  data:' + JSON.stringify(data))
+
+                    self.onReceiveResponse(data, extra_data);
+
+                }).catch((error) => {
+
+                    self.onGotErrorResponse(error, extra_data);
+                });
+
+
+        } catch (e) {
+
+            console.log('[sendRequestForDeleteMessage] Error  -------- :: ' + e);
+        }
+    }
+
+    loadSearchMessagesFromDB(searchKeyword) {
+        var self = this;
+
+        try {
+
+            let archiveId = localStorage.getItem(Params.WS_IM_ARCHIVEID);
+            let agentId = localStorage.getItem(Params.WS_LOGIN_USER);
+            let siteId = localStorage.getItem(Params.WS_SITE_ID);
+
+            console.log("[loadSearchMessagesFromDB] =========== ");
+
+            let params = {
+                agentid: agentId,
+                archiveid: archiveId,
+                siteid: siteId,
+                searchedKeyword: searchKeyword,
+                initialLimit: 0,
+                secondLimit: 40,
+            };
+
+            let extra_data = {
+                req_type: Constants.REQ_TYPE.LOAD_SEARCH_MESSAGES,
+                searchkeyword: searchKeyword,
+            }
+
+            ServerHandler.sendServerRequest(URLParams.REQ_SEARCH_MESSAGES, {}, params, URLParams.REQ_GET, extra_data)
+                .then((data, extra_data) => {
+
+                    console.log(TAG + '[loadSearchMessagesFromDB] response_data :: ' + JSON.stringify(data.response_data) + " :: extra_data :: " + JSON.stringify(data.extra_data));
+                    self.onReceiveResponse(data.response_data, data.extra_data);
+
+                })
+                .catch((error) => {
+
+                    self.onGotErrorResponse(error, extra_data);
+                });
+
+
+        } catch (e) {
+            console.log(TAG + '[loadSearchMessagesFromDB] Error  -------- :: ' + e);
+        }
+    }
+
+    onReceiveSearchMessagesData(response_data, extra_data) {
+        var self = this;
+        try {
+            console.log(TAG + "[onReceiveSearchMessagesData] ------------ response_data: " + JSON.stringify(response_data));
+
+            if (response_data.length == 0) {
+
+                console.log(TAG + "[onReceiveSearchMessagesData] NO DATA FOUND -----------");
+                return;
+            }
+
+            let messageSearchList = response_data.message_search_list;
+            let messageSearchListCount = response_data.message_search_count
+            // let attachmentSearchList = response_data.attachment_search_list
+            // let attachmentSearchListCount = response_data.attachment_search_count
+
+            console.log(TAG + "[onReceiveSearchMessagesData] messageSearchList :: " + JSON.stringify(messageSearchList) + ", messageSearchListCount :: " + JSON.stringify(messageSearchListCount));
+
+            //console.log("[onReceiveSearchMessagesData] messageSearchList :: " + JSON.stringify(messageSearchList) + ", messageSearchListCount :: " + JSON.stringify(messageSearchListCount) + ", attachmentSearchList :: " + attachmentSearchList + ", attachmentSearchListCount :: " + attachmentSearchListCount);
+
+            var messageSearchListData = MessageHandler.getSearchList(Constants.SEARCH_MESSAGES_TYPE.MESSAGE_SEARCH_LIST);
+            var messageSearchListCountData = MessageHandler.getSearchCount(Constants.SEARCH_MESSAGES_TYPE.MESSAGE_SEARCH_LIST_COUNT);
+            // var attachmentSearchListData = MessageHandler.getSearchList(Constants.REQ_SEARCH_MESSAGES_TYPE.ATTACHMENT_SEARCH_LIST);
+            // var attachmentSearchListCountData = MessageHandler.getSearchCount(Constants.REQ_SEARCH_MESSAGES_TYPE.ATTACHMENT_SEARCH_LIST_COUNT);
+
+            // CLEARING THE CURRENT DATA
+            if (messageSearchListData.length > 0) {
+                MessageHandler.clearSearchList(Constants.SEARCH_MESSAGES_TYPE.MESSAGE_SEARCH_LIST);
+            }
+
+            if (messageSearchListCountData.length > 0) {
+                MessageHandler.clearSearchList(Constants.SEARCH_MESSAGES_TYPE.MESSAGE_SEARCH_LIST_COUNT);
+            }
+
+            // if (attachmentSearchListData.length >0) {
+            //     MessageHandler.clearSearchList(Constants.SEARCH_MESSAGES_TYPE.ATTACHMENT_SEARCH_LIST);
+            // }
+
+            // if (attachmentSearchListCountData.length >0) {
+            //     MessageHandler.clearSearchList(Constants.SEARCH_MESSAGES_TYPE.ATTACHMENT_SEARCH_LIST_COUNT);
+            // }
+
+            // ADDING THE DATA
+            if (messageSearchList && messageSearchList.length > 0) { // save message search list
+                MessageHandler.addSearchList(messageSearchList, Constants.SEARCH_MESSAGES_TYPE.MESSAGE_SEARCH_LIST);
+            }
+
+            if (messageSearchListCount) { // save message search count
+                MessageHandler.addSearchList(messageSearchListCount, Constants.SEARCH_MESSAGES_TYPE.MESSAGE_SEARCH_LIST_COUNT);
+            }
+
+            // if (attachmentSearchList && attachmentSearchList.length >0) { // save attachment search list
+            //     MessageHandler.addSearchList(attachmentSearchList, Constants.SEARCH_MESSAGES_TYPE.ATTACHMENT_SEARCH_LIST);
+            // }
+
+            // if (attachmentSearchListCount) { // save attachment search count
+            //     MessageHandler.addSearchList(attachmentSearchListCount, Constants.SEARCH_MESSAGES_TYPE.ATTACHMENT_SEARCH_LIST_COUNT);
+            // }
+
+            let searchData = {
+
+                isMessageSearched: true,
+                searchKeyword: extra_data.searchkeyword,
+            }
+
+            evntEmitter.emit(EmitterConstants.EMMIT_ON_SEARCHED_MESSAGE_RECEIVED, { searchData });
+            evntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, { "isMessageSearched": true });
+
+        } catch (e) {
+            console.log("[onReceiveSearchMessagesData] Error ---- :: " + e);
+        }
+    }
 
     //===================           RESPONSE HANDLING       =======================
     onReceiveResponse(response_data, extra_data) {
@@ -1006,6 +1280,7 @@ class SettingsHandler {
                 case Constants.REQ_TYPE.ALL_SMS:
                 case Constants.REQ_TYPE.INDIVIDUAL_SMS:
                 case Constants.REQ_TYPE.SMS_GROUPS:
+                case Constants.REQ_TYPE.SMS_UNREAD:
 
                     self.onReceiveSMSData(response_data, extra_data);
 
@@ -1050,9 +1325,20 @@ class SettingsHandler {
                     self.onReceiveContacts(response_data, extra_data);
                     break;
 
-                default:
+                case Constants.REQ_TYPE.LOAD_NOTIFICATION_SOUNDS:
+
+                    self.onReceiveNotificationSounds(response_data, extra_data);
                     break;
 
+                case Constants.REQ_TYPE.DELETE_MESSAGE:
+
+
+                    break;
+
+                case Constants.REQ_TYPE.LOAD_SEARCH_MESSAGES:
+
+                    self.onReceiveSearchMessagesData(response_data, extra_data);
+                    break;
             }
 
         } catch (e) {

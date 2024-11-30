@@ -71,8 +71,8 @@ class UploadHandler {
                     ['CLIENTTYPE', 'WEB'],
                     ['X-Auth-Token', xauthtoken],
                     ['VERSION', '0'],
-                    ['ws_device_name', "REACT_SENTIMENTS_WEB_APP"],
-                    ['ws_system_id', "!@#12"],
+                    ['ws_device_name', deviceNameAndsystemId],
+                    ['ws_system_id', deviceNameAndsystemId],
                     ['WORKFOLDERPATH', attachmentPath]
                 ]
 

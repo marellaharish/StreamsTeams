@@ -7,14 +7,16 @@ class MessageHandler {
 
     constructor() {
 
-        this.all_sms = [];
+        this.sms_recents = [];
 
         this.contacts_list = new Map();
 
+        this.search_data = new Map();
         this.sms_assigned_groups_didlist = new Map();
         this.sms_data = new Map();
         this.sms_group_dids = new Map();
         this.sms_messages = new Map();
+        this.notification_sounds = new Map();
     }
 
     clearSMSGroups() {
@@ -42,11 +44,18 @@ class MessageHandler {
         this.sms_messages.delete(sms_id);
     }
 
+    clearAssignedGroupsDIDList() {
+
+        this.sms_assigned_groups_didlist = new Map();
+    }
+
     addSMSData(message_data, sms_type) {
 
         try {
 
             let newMessage;
+
+            this.sms_recents.push(message_data);
 
             if (this.sms_data.get(sms_type)) {
 
@@ -77,19 +86,6 @@ class MessageHandler {
 
             console.log('[addSMSData] Error  -------- :: ' + e);
         }
-    }
-
-    addSMSGroups(group) {
-
-        try {
-
-            this.sms_groups.push(group);
-
-        } catch (e) {
-
-            console.log('[addSMSGroups] Error  -------- :: ' + e);
-        }
-
     }
 
     addSMSGroupDID(group_code, did_data, is_chat_message) {
@@ -253,11 +249,6 @@ class MessageHandler {
         return message_data;
     }
 
-    getSMSGroups() {
-
-        return this.sms_groups;
-    }
-
     getSMSGroupDIDs(group_code) {
 
         let messages = [];
@@ -302,25 +293,6 @@ class MessageHandler {
         return messages;
     }
 
-    getSMSAssignedDIDsList() {
-
-        let size = 0;
-        try {
-
-
-            if (this.sms_assigned_groups_didlist) {
-
-                size = this.sms_assigned_groups_didlist.size;
-            }
-
-        } catch (e) {
-
-            console.log(TAG + '[getSMSAssignedGroupsDIDList] Error  -------- :: ' + e);
-        }
-
-        return size;
-    }
-
     getSMSAssignedGroupsDIDList(group_code) {
 
         let didsList = [];
@@ -343,20 +315,22 @@ class MessageHandler {
         return didsList;
     }
 
-    // Retrieve all messages (SMS and Chat) in chronological order
-    getAllMessages() {
+    getSMSAssignedDIDsList() {
 
+        let size = 0;
         try {
 
-            // Merge the arrays and sort them by timestamp
-            const allMessages = [...this.sms_groups];
-            return allMessages//allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            if (this.sms_assigned_groups_didlist) {
+
+                size = this.sms_assigned_groups_didlist.size;
+            }
 
         } catch (e) {
 
-            console.log("[MessageHandler].getAllMessages() Error :: " + e);
+            console.log(TAG + '[getSMSAssignedGroupsDIDList] Error  -------- :: ' + e);
         }
 
+        return size;
     }
 
     updateSMSTabMessage(phnumber, message_data) {
@@ -408,7 +382,7 @@ class MessageHandler {
 
             console.log(TAG + '[updateSMSTabMessage] -- index : ' + index)
 
-            if (index !== -1) {
+            if (index !== -1) {//Delete the message entry from the older position as we need to insert the new entry in the 1st position.
 
                 message_array.splice(index, 1)
             }
@@ -502,6 +476,121 @@ class MessageHandler {
         return contactsData;
     }
 
+    addNotificationSounds(type, result_data) {
+        try {
+
+            if (Utils.isNumeric(type)) {
+                type = type * 1
+            }
+
+            console.log("[addNotificationSounds] :: " + JSON.stringify(result_data));
+
+            this.notification_sounds.set(type, result_data);
+
+        } catch (e) {
+            console.log('[addNotificationSounds] Error  -------- ::' + e);
+        }
+    }
+
+    getNotificationSounds(type) {
+        let notifcationSounds = [];
+        try {
+
+            if (this.notification_sounds.get(type)) {
+
+                notifcationSounds = this.notification_sounds.get(type);
+            }
+
+        } catch (e) {
+
+            console.log('[getNotificationSounds] Error  -------- :: ' + e);
+        }
+        return notifcationSounds;
+    }
+
+    addSearchList(result_data, type) {
+        try {
+
+            if (Utils.isNumeric(type)) {
+                type = type * 1
+            }
+
+            // Check provided input is Array object or not, If it is not array then save the result return. This will execute for count queries
+            if (!Array.isArray(result_data)) {
+
+                this.search_data.set(type, result_data);
+                console.log(`[addSearchList] Non-array data set for type: ${type}`, result_data);
+
+                return
+            }
+
+            let final_data = []
+            if (this.search_data.has(type)) {
+
+                final_data = this.search_data.get(type);
+
+                if (!final_data || final_data.length <= 0) {
+
+                    final_data = []
+                }
+            }
+
+            final_data.push(...result_data);
+            this.search_data.set(type, final_data);
+
+        } catch (e) {
+
+            console.log('[addSearchList] Error  -------- :: ' + e);
+        }
+    }
+
+    getSearchList(type) {
+        let final_data = [];
+        try {
+
+            if (Utils.isNumeric(type)) {
+
+                type = type * 1
+            }
+
+            if (this.search_data.has(type)) {
+
+                final_data = this.search_data.get(type);
+            }
+
+        } catch (e) {
+            console.log('[getSearchList] Error  -------- :: ' + e);
+        }
+
+        return final_data;
+    }
+
+    getSearchCount(type) {
+        let final_data = {};
+        try {
+
+            if (this.search_data.has(type)) {
+
+                final_data = this.search_data.get(type)
+            }
+
+        } catch (e) {
+            console.log('[getSearchCount] Error  -------- :: ' + e);
+        }
+
+        return final_data;
+    }
+
+    clearSearchList(type) {
+        try {
+
+            this.search_data.delete(type);
+            console.log('[clearSearchList] All search data has been cleared.');
+
+        } catch (e) {
+            console.log('[clearSearchList] Error -------- :: ' + e);
+        }
+    }
 
 }
 

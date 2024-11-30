@@ -6,7 +6,7 @@
 import React, { useEffect } from "react";
 import { MDBContainer, MDBRow, MDBCol, MDBInput, MDBCheckbox, MDBBtn, MDBIcon } from 'mdb-react-ui-kit';
 import { useState } from "react";
-import { json, useNavigate } from "react-router-dom";
+import { json, useLocation, useNavigate } from "react-router-dom";
 import md5 from 'md5';
 
 import { checkmark, Panterra, StreamsLogo } from '../../assets/images';
@@ -14,9 +14,11 @@ import { checkmark, Panterra, StreamsLogo } from '../../assets/images';
 import URLParams from "../../config/URLParams"
 import Params from "../../config/Params"
 import Config from "../../config/Config"
+import Constants from "../../config/Constants"
 import MessaageConstants from "../../config/MessaageConstants"
 import serverHandler from "../../classes/utils/ServerHandler"
 
+let TAG = "[Login.js].";
 function Login() {
 
     const navigate = useNavigate();
@@ -33,22 +35,100 @@ function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [loginReqStatus, setLoginReqStatus] = useState(false);
 
+    const location = useLocation();
+
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
 
     useEffect(() => {
 
-        console.log('[Login].useEffect() default---- ');
+        try {
+            console.log('[Login].useEffect() default---- ');
 
-        if (localStorage.getItem("authenticated") &&
-            localStorage.getItem("LOGIN_USER")) {
+            if (localStorage.getItem("authenticated") &&
+                localStorage.getItem("LOGIN_USER")) {
 
-            //navigate("/home");
+                navigate("/home");
+            }
+
+            console.log(TAG + '[Login].useEffect() default---- authenticated :: ' + localStorage.getItem("authenticated") + ", LOGIN_USER :: " + localStorage.getItem("LOGIN_USER") + " :: window :: " + window.location.href);
+
+            let result = new URL(window.location.href);
+            let authKey = result.searchParams.get("authkey");
+
+            const baseURL = new URL(location.href || window.location.href).origin + location.pathname;
+
+            console.log(TAG + "baseURL :: " + baseURL + ", pathname :: " + location.pathname);  // Logs: https://streamsreact.beta-wspbx.com/auth 
+
+            console.log(TAG + "[Login]    pathaname :: " + JSON.stringify(location));
+
+            if (baseURL === "LoginSuccess") {
+
+                //verifyAuthKey();
+            }
+
+            //debugger;
+            if (!authKey && (localStorage.getItem("authenticated") == null &&
+                localStorage.getItem("LOGIN_USER") == null) ||
+                localStorage.getItem("authenticated") == false ||
+                localStorage.getItem("LOGIN_USER") == '') {
+
+                console.log("[Login].useEffect() default---- REDIRECTING TO AUTH SERVICE ---- ")
+                //window.location.href = Config.AUTH_SERVICE_URL;
+                return
+            }
+
+        } catch (e) {
+
+            console.log("Error in [Login].useEffect() default :: " + e);
         }
 
     }, []);
 
+    useEffect(() => {
+
+        console.log(TAG + '[Login].useEffect() LoginSuccess---- ');
+
+        verifyAuthKey();
+
+    }, [location.pathname === "LoginSuccess"]);
+
+    async function verifyAuthKey() {
+        var self = this;
+        try {
+
+            let result = new URL(window.location.href);
+            let authKey = result.searchParams.get("authkey");
+
+            let params = {
+
+                authkey: authKey
+            }
+
+            let extra_data = {
+
+                req_type: Constants.REQ_TYPE.VERIFY_USER_LOGIN
+            }
+
+            console.log(TAG + "[verifyAuthKey] authJKey :: " + authKey + " :: params :: " + JSON.stringify(params) + " :: extra_data :: " + JSON.stringify(extra_data));
+
+            serverHandler.sendServerRequest(URLParams.REQ_VERIFY_USER_LOGIN, {}, params, URLParams.REQ_GET, extra_data)
+                .then((data, extra_data) => {
+
+                    console.log(TAG + '[verifyAuthKey] response_data :: ' + JSON.stringify(data.response_data) + " :: extra_data :: " + JSON.stringify(data.extra_data));
+                    onReceiveResponse(data, data.extra_data);
+
+                })
+                .catch((error) => {
+
+                    onGotErrorResponse(error, extra_data);
+                });
+
+        } catch (e) {
+            console.log("[verifyAuthKey] Error  -------- :: " + e);
+        }
+    }
 
     const errors = {
 
@@ -116,7 +196,7 @@ function Login() {
             setauthenticated(true)
 
             localStorage.setItem("authenticated", true);
-            localStorage.setItem(Params.WS_LOGIN_USER, username);
+            localStorage.setItem(Params.WS_LOGIN_USER, !response.username ? response.wsuserid : response.username);
 
             for (let key in response) {
 
@@ -159,6 +239,8 @@ function Login() {
 
                     localStorage.setItem(Params.WS_SITE_ID, siteID);
                     localStorage.setItem(Params.WS_IM_ARCHIVEID, archiveid);
+                    localStorage.setItem(Params.WS_LOGGED_USER_FIRSTNAME, data.response_data[0].firstname);
+                    localStorage.setItem(Params.WS_LOGGED_USER_LASTNAME, data.response_data[0].lastname);
 
                     navigate("/home");
 
@@ -320,17 +402,17 @@ function Login() {
                 headers: jsonObject,
                 body: JSON.stringify({})
               }).then(response => {
-
+    
                 resp_status = response.status;
                 return response.json();
                     
             }).then((data) => {
-
+    
                 onReceiveResponse(jsonObject, data);
             }).catch(function(error) {
-
+    
                 console.log("Error in sendPOSTServerRequest :: "+error);
-
+    
                 onGotErrorResponse(jsonObject);
             });*/
 
@@ -409,7 +491,7 @@ function Login() {
                         </MDBCol>
 
                         <MDBCol md="6" className="text-left p-4 mob-d-none  ">
-                            <div className="bg-light p-5 shadow-4 rounded-5 w-100 h-100 p-mob-0">
+                            <div className="bg-card p-5 shadow-4 rounded-5 w-100 h-100 p-mob-0">
                                 <h4 className="mb-3"><strong>Introducing Streams, the revolutionary new way for Businesses to Communicate, Collaborate & Share Information</strong></h4>
                                 <ul className="pl-3 loginInstructions mt-5" style={{ listStyleType: 'none', paddingLeft: '20px' }}>
                                     {MessaageConstants.STREAMS_FEATURES.map((feature, index) => (

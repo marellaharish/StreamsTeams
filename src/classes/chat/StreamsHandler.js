@@ -9,6 +9,7 @@ import IMConstants from "../../config/IMConstants"
 import UploadHandler from "../../classes/media/UploadHandler"
 import IMHandler from "../../socket/IMHandler"
 import IMConnector from '../../socket/IMConnector'
+import SettingsHandler from '../../classes/settings/SettingsHandler'
 
 var moment = require('moment');
 
@@ -47,7 +48,7 @@ class StreamsHandler {
                 sid: sms_id,
                 cid: cid,
                 direct: direct,
-                latest_time: new Date().toISOString(),
+                latest_time: Utils.getCurrentUTCTime(),
                 extramsg: "",
                 direction: 1,
                 unread_count: 0
@@ -132,7 +133,7 @@ class StreamsHandler {
                 sid: sms_id,
                 cid: cid,
                 direct: direct,
-                latest_time: new Date().toISOString(),
+                latest_time: Utils.getCurrentUTCTime(),
                 phnumber: phnumber,
                 extramsg: "",
                 direction: 1,
@@ -186,7 +187,7 @@ class StreamsHandler {
                 msgtype: element.msgtype,
                 type: type,
                 id: Date.now(),
-                latest_time: new Date().toISOString(),
+                latest_time: element.time,
                 direct: 1,
                 extramsg: "",
                 smsgid: element.smsgid,
@@ -294,7 +295,14 @@ class StreamsHandler {
 
             IMHandler.sendAck(data.Message.id, element.smsgid, element.msgtype)
 
-            //Show Notification
+            if (echo_status == false) {
+
+                var userNotificationSound = MessageHandler.getNotificationSounds(Constants.NOTIFICATION_SOUNDS.USER_EVENT_NOTIFICATION_SOUND);
+                Utils.playSound(userNotificationSound);
+
+                //Show Notification
+            }
+
 
         } catch (e) {
 
@@ -395,57 +403,24 @@ class StreamsHandler {
             let msg_phnumber = msg_data.phnumber;
             let sid = msg_data.sid;
 
+
             let keyIndex = (msg_group_code || msg_phnumber) ? Constants.REQ_SMS_TAB_TYPE.ALL_SMS : Constants.REQ_TYPE.CHAT
 
-            let recentsChatList = MessageHandler.getSMSData(keyIndex);
+            //Need to update the count in All tab. 
+            this.clearUnreadCountForMatchedData(msg_data, keyIndex)
 
-            console.log(TAG + "[clearUnreadCount] recentsChatList : " + recentsChatList.length + " :: keyIndex :: " + keyIndex);
+            //Need to update the count in Individual as well. 
+            keyIndex = Constants.REQ_SMS_TAB_TYPE.INDIVIDUAL_SMS
+            this.clearUnreadCountForMatchedData(msg_data, keyIndex)
 
-            let message_data = recentsChatList.find((object) => {
-
-                //console.log(TAG + "[clearUnreadCount] object :--1111--: " + JSON.stringify(object));
-
-                if (object.msgtype === IMConstants.WS_IM_MMS || object.msgtype === IMConstants.WS_IM_SMS) {
-
-                    const existingMessage = object.message ? JSON.parse(object.message) : object;
-                    if (msg_group_code) {
-
-                        return (existingMessage.group_code && (existingMessage.group_code * 1) === (msg_group_code * 1) &&
-                            object.phnumber && (object.phnumber * 1) === (msg_phnumber * 1))
-
-                    } else {
-
-                        return (!existingMessage.group_code && object.phnumber && (object.phnumber * 1) === (msg_phnumber * 1))
-                    }
-
-                }
-
-                // SID match check
-                if (sid && object.sid && (object.sid * 1) === (sid * 1)) {
-
-                    console.log(TAG + "[clearUnreadCount] SID check matched");
-                    return true;
-                }
-
-                // If none of the conditions match, skip this object
-                return false;
-            });
-
-            console.log(TAG + "[clearUnreadCount] message_data :: " + message_data);
-
-            if (message_data) {
-
-                message_data.unread_count = 0
-                EvntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_GROUPS_RECEIVED, message_data)
-            }
-
-            //Need to update the count in Groups as well.
-            //Need to update the count in Individual as well.
+            //Need to update the count in UnRead as well.   
+            keyIndex = Constants.REQ_SMS_TAB_TYPE.SMS_UNREAD
+            this.clearUnreadCountForMatchedData(msg_data, keyIndex)
 
             if (msg_group_code) {
 
-                recentsChatList = MessageHandler.getSMSGroupDIDs(msg_group_code)
-                message_data = recentsChatList.find(object => (msg_phnumber && object.phnumber && ((object.phnumber * 1) === (msg_phnumber * 1))))
+                let recentsChatList = MessageHandler.getSMSGroupDIDs(msg_group_code)
+                let message_data = recentsChatList.find(object => (msg_phnumber && object.phnumber && ((object.phnumber * 1) === (msg_phnumber * 1))))
 
                 if (message_data) {//This is to update count in DID's list
 
@@ -459,6 +434,78 @@ class StreamsHandler {
         } catch (e) {
             console.log(TAG + '[clearUnreadCount] ERROR  -------- :: ' + e);
         }
+    }
+
+    clearUnreadCountForMatchedData(msg_data, filterType) {
+
+        try {
+
+            let recentsChatList = MessageHandler.getSMSData(filterType);
+
+            console.log(TAG + "[clearUnreadCountForMatchedData]  recentsChatList : " + recentsChatList.length + " :: filterType :: " + filterType);
+
+            let msg_group_code = msg_data.group_code;
+            let msg_phnumber = msg_data.phnumber;
+            let sid = msg_data.sid;
+
+            let message_data = recentsChatList.find((object) => {
+
+                //console.log(TAG + "[clearUnreadCountForMatchedData] object :--1111--: " + JSON.stringify(object));
+
+                if (object.msgtype === IMConstants.WS_IM_MMS || object.msgtype === IMConstants.WS_IM_SMS) {
+
+                    const messageData = object.message ? JSON.parse(object.message) : object;
+
+                    //console.log(TAG + "[clearUnreadCountForMatchedData] messageData :----: " + JSON.stringify(messageData) + " :: msg_group_code :: " + msg_group_code + " :: msg_phnumber :: " + msg_phnumber);
+                    // Group SMS or Group with one recipient check
+                    if (
+                        msg_group_code &&
+                        messageData.group_code &&
+                        (messageData.group_code * 1) === (msg_group_code * 1) &&
+                        msg_phnumber &&
+                        object.phnumber &&
+                        (object.phnumber * 1) === (msg_phnumber * 1)
+                    ) {
+                        console.log(TAG + "[clearUnreadCountForMatchedData] Group SMS check matched");
+                        return true;
+                    }
+
+                    // 1-1 SMS check
+                    if (
+                        !messageData.group_code &&
+                        msg_phnumber &&
+                        object.phnumber &&
+                        (object.phnumber * 1) === (msg_phnumber * 1)
+                    ) {
+                        console.log(TAG + "[clearUnreadCountForMatchedData] 1-1 SMS check matched");
+                        return true;
+                    }
+                }
+
+                // SID match check
+                if (sid && object.sid && (object.sid * 1) === (sid * 1)) {
+
+                    console.log(TAG + "[clearUnreadCountForMatchedData] SID check matched");
+                    return true;
+                }
+
+                // If none of the conditions match, skip this object
+                return false;
+            });
+
+            console.log(TAG + "[clearUnreadCountForMatchedData] message_data :: " + message_data);
+
+            if (message_data) {
+
+                message_data.unread_count = 0
+                EvntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_GROUPS_RECEIVED, message_data)
+            }
+
+
+        } catch (e) {
+            console.log(TAG + '[clearUnreadCountForMatchedData] ERROR  -------- :: ' + e);
+        }
+
     }
 
     getSMSDIDUnreadCount(group_code, phnumber) {
@@ -781,6 +828,82 @@ class StreamsHandler {
             console.log('[deleteSMSMessage] Error  -------- :: ' + e);
         }
     }
+
+    async deleteSMSMessage(messageData) {
+
+        try {
+
+            let msgData = messageData.message && messageData.message !== undefined ? JSON.parse(messageData.message) : messageData
+
+            let sid = (msgData.group_code && msgData.group_code !== undefined) ?
+                msgData.group_code + "_" + msgData.to : messageData.phnumber;
+
+            console.log('[deleteSMSMessage] sid  :: ' + sid);
+            let requestParams = {
+
+                opcode: Constants.API_HANDLER.WS_APIHANDLER_DELETE_MESSAGE,
+                smsgid: String(messageData.smsgid),
+                sid: String(messageData.phnumber), //String(sid),
+                phnumber: String(messageData.phnumber),
+                nonstream: 'true',
+                wsuniqueid: localStorage.getItem(Params.WS_IM_ARCHIVEID),
+                siteid: localStorage.getItem(Params.WS_SITE_ID),
+            };
+
+            this.addEditOrDeleteMessageList(sid, messageData.smsgid, Constants.REQ_TYPE_SMS_ACTION.ACTION_DELETE)
+            SettingsHandler.sendRequestForDeleteMessage(requestParams)
+
+            // if (sid) {
+
+            //     let dataList = MessageHandler.getSMSMessages(sid);
+            //     let index = dataList ? dataList.findIndex(object => (object.smsgid == messageData.smsgid || object.cid === messageData.cid)) : undefined
+
+            //     if (index !== -1) {
+
+            //         dataList.splice(index, 1);
+            //         EvntEmitter.emit(EmitterConstants.EMMIT_ON_SMS_MESSAGES_RECEIVED, {});
+            //     }
+
+            // }
+
+        } catch (e) {
+            console.log(TAG + '[deleteSMSMessage] Error  -------- :: ' + e);
+        }
+    }
+
+    async onUpdateSMSGroupDetails(receivedData, message) {
+
+        try {
+
+            console.log(TAG + "[onUpdateSMSGroupDetails] --------");
+
+            let removedUsersList = message.removed_users;
+            let addedUsersList = message.added_users;
+            let phoneNumbersList = message.phonenumbers;
+
+            let groupsList = message.groups;
+
+            let group_code = 0;
+            groupsList.forEach(group => {
+
+                console.log("Code:", group.code);
+                group_code = group.code;
+
+            });
+
+            let data = {};
+            data.group_code = group_code;
+
+            if (group_code * 1 > 0) {
+
+                SettingsHandler.loadSMSGroupAssignedDIDList(data);
+            }
+
+        } catch (e) {
+            console.log(TAG + '[onUpdateSMSGroupDetails] Error  -------- :: ' + e);
+        }
+    }
+
 
     //===============   General Functions [end]   ==========================    
 

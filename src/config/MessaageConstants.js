@@ -14,3 +14,8 @@ exports.SMS_ALERT_SMS_DID__NOT_AVAILABLE = "You don't have SMS enabled DID to se
 exports.SMS_ALERT_NEW_NUMBER_CONFIRMATION = 'The from number ? is not available to send. Instead you can send SMS/MMS from #'
 exports.SMS_ALERT_GROUP_SMS_TO_FROM_NUMBER_SELECTION = 'Send as SMS Message'
 exports.SMS_ALERT_SMS_ATACHMENT_LIMIT = "Please select a file not exceeding 450 KB in size."
+
+exports.SMS_ALERT_ALLOW_SMS_ATACHMENT_TYPES = "This is an unsupported file type. Please select a file matching any of the following file types: 3gp, amr, 3ga, m4a, m4p, m4b,m4r, mp3,wav,bmp, dib, gif, jpg, jpeg, png, h263, h264, mp4, m4v"
+exports.SMS_ALERT_MESSAGE_DELETE = "Are you sure you want to delete this entry/item? This action cannot be undone."
+exports.SMS_ALERT_SHOW_SMS_PHNUMBER_LIMIT = "Please enter a phone number with at least 3 digits and not exceeding 11 digits";
+exports.SMS_ALERT_SMS_ATACHMENT_SELECT_LIMIT = "Multiple attachments cannot be sent via MMS"

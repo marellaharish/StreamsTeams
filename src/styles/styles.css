@@ -208,12 +208,12 @@ body {
     --card-title-dark-background-color: rgb(32, 33, 36);
     --card-title-dark-color: #fff;
     --card-border-dark-color: rgb(95, 99, 104);
-    --card-background-dark-color: #131314;
+    --card-background-dark-color: #252525;
 
     --active-card-background-color: #527f4a;
     --world-section-active-bg-color: #007706;
 
-    --world-section-hover-bg-color: #1e1f20;
+    --world-section-hover-bg-color: #191919;
     --list-item-hover-bg-color: rgba(196, 199, 197, 0.08);
     --primary-text-color: var(--gm3-color-on-surface);
     --secondary-text-color: var(--gm3-color-outline);
@@ -308,7 +308,7 @@ p {
 
 .users-view-container {
     /* padding: 10px; */
-    height: calc(100vh - 220px);
+    height: calc(100vh - 230px);
     overflow-y: auto;
     width: auto;
     overflow-x: hidden;
@@ -350,6 +350,15 @@ p {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis !important;
+    margin: 0 !important;
+}
+
+.ChatUserNameChat {
+    text-transform: capitalize;
+    color: var(--secondary-text) !important;
+    font-weight: 500;
+    font-size: 0.975rem;
+    line-height: 1.5rem;
     margin: 0 !important;
 }
 
@@ -438,7 +447,7 @@ p {
 }
 
 .card-height {
-    height: calc(100vh - 115px);
+    height: calc(100vh - 130px);
     position: relative;
 }
 
@@ -467,8 +476,8 @@ p {
 }
 
 .messagesContainerMain {
-    max-height: calc(100vh - 200px);
-    min-height: calc(100vh - 200px);
+    max-height: calc(100vh - 210px);
+    min-height: calc(100vh - 210px);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -654,7 +663,8 @@ button {
 
 .groupDID-view-container {
     padding: 10px;
-    height: calc(100vh - 123px);
+    max-height: calc(100vh - 123px);
+    min-height: calc(100vh - 123px);
     overflow-y: auto;
     scrollbar-width: none;
 }
@@ -1003,6 +1013,7 @@ li.nav-item {
 .nav-tabs .nav-link {
     border: none !important;
 }
+
 
 .card-body,
 .card {
@@ -1857,15 +1868,234 @@ hr {
     border-radius: 8px;
     color: var(--text-100);
     text-shadow: none;
-    overflow: hidden;
     box-shadow: none;
     /* padding: 12px; */
     font-weight: normal;
     font-size: 14px;
     left: 50%;
     transform: translateX(-50%);
+    max-height: calc(100vh - 170px);
+    overflow-y: auto;
 }
 
 .w-90 {
     width: 93% !important;
+}
+
+.welcomeScreen_main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding-bottom: 50px;
+    width: 100%;
+    height: 100vh;
+}
+
+.StreamsMainLogo {
+    width: 95px;
+}
+
+@keyframes rotateImg {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.Streamstext {
+    font-size: 3.7em !important;
+    user-select: none;
+}
+
+.WelcomeSubHead {
+    font-size: 1.4rem;
+    color: #999999;
+}
+
+.Welcomeloader {
+    width: 60px;
+    animation: rotateImg 5s linear infinite;
+}
+
+.Welcomeloader_main {
+    position: absolute;
+    bottom: 60px;
+}
+
+.Welcomeloader_main p {
+    color: #999999;
+    font-size: 1.2rem;
+}
+
+.globe {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background-color: #111;
+    padding: 5px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.inputIconEnd {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translate(-15px, -50%);
+}
+
+
+.chatComponent {
+    padding: 5px 15px;
+}
+
+
+.highlightComponent {
+    animation: fadeToWhite 3s ease-in-out forwards;
+    /* Adjust duration as needed */
+}
+
+@keyframes fadeToWhite {
+    from {
+        background-color: var(--highlight-search);
+        /* Initial color */
+    }
+
+    to {
+        background-color: var(--highlight-search-color);
+        /* Final color */
+    }
+}
+
+.row>* {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 100%;
+    padding-right: calc(var(--mdb-gutter-x) * 0.2) !important;
+    padding-left: calc(var(--mdb-gutter-x) * 0.4) !important;
+    margin-top: var(--mdb-gutter-y);
+}
+
+
+
+.abc {
+    min-width: 280px;
+    min-height: 489px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.SoftPhoneContainer {
+    width: 360px;
+    height: 580px;
+}
+
+.titleCard {
+    width: 100%;
+    height: 38%;
+    background-color: #007706;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.titleDiv {
+    background-color: #FFFFFF;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.titleDiv h3 {
+    margin: 0;
+    font-size: 40px;
+}
+
+.softphoneCallContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 15px;
+}
+
+.softphoneCallContainer h1 {
+    text-transform: uppercase;
+    font-size: 30px !important;
+    font-weight: 400;
+    text-align: center;
+}
+
+
+
+.softphoneCallContainer .dialpad-button {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--dailpadBtn);
+    font-size: 20px;
+    color: var(--text);
+    border: none;
+    outline: none;
+    cursor: pointer;
+}
+
+
+.softphoneCallContainer .dialpad-call-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: green;
+    color: white;
+    font-size: 20px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    margin-bottom: 0px;
+}
+
+.softphoneCallContainer .dialpad-call-button.reject {
+    background-color: #ff4444 !important;
+}
+
+
+.softphoneCallContainer .grid-item p {
+    margin-top: 8px !important;
+}
+
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 20px 60px;
+    align-items: center;
+    justify-items: center;
+}
+
+.grid-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.reject i {
+    transform: rotate(136deg);
 }

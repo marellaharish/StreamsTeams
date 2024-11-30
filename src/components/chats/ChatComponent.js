@@ -1,21 +1,29 @@
-import { Copy, Delete, Edit, Reply, Send } from '../../assets/images';
-import { REQ_TYPE_SMS_ACTION } from "../../config/Constants";
+import React, { Component } from 'react';
+
 import Attachments from './Attachments';
+import Utils from '../../classes/utils/util';
+import { Comment, Copy, Delete, Emoji, Forward, Edit, Reply, Profile, Send, Upload, Settings } from '../../assets/images';
+import Constants, { REQ_TYPE_SMS_ACTION } from "../../config/Constants"
+import IMConstants from '../../config/IMConstants'
+import Params from "../../config/Params"
+import MessageConstants from "../../config/MessaageConstants"
 
 import {
     MDBBtn,
-    MDBCheckbox,
-    MDBIcon,
-    MDBInput,
     MDBModal,
-    MDBModalBody,
-    MDBModalContent,
     MDBModalDialog,
-    MDBModalFooter,
+    MDBModalContent,
     MDBModalHeader,
     MDBModalTitle,
+    MDBModalBody,
+    MDBModalFooter,
+    MDBInput,
+    MDBCheckbox,
+    MDBIcon,
     MDBTextArea
 } from 'mdb-react-ui-kit';
+import { el } from 'date-fns/locale';
+import { PhotoProvider } from 'react-photo-view';
 
 class ChatComponents {
 
@@ -46,6 +54,19 @@ class ChatComponents {
             const messageTo = parsedMessage?.to || '';
             const messageContent = parsedMessage?.msg || [];
 
+            const isFailureSMS = (parsedFailureReason && parsedFailureReason.reason &&
+                parsedFailureReason.reason.length > 0 && parsedFailureReason.errcode.length > 0) || false
+
+            const isIncomingMessage = (parsedMessage.direction && parsedMessage.direction * 1 === Constants.REQ_TYPE_CHAT.WS_INCOMING_MESSAGE) || false
+
+            let isOutBoundSMSSentBySelf = !isIncomingMessage;//If it is not Incoming msg then it's outbout sms.
+
+            if (parsedMessage && parsedMessage.group_uname && isOutBoundSMSSentBySelf) {
+
+                const loggedUser = localStorage.getItem(Params.WS_LOGIN_USER)
+                isOutBoundSMSSentBySelf = (parsedMessage.group_uname === loggedUser) || false
+            }
+
             // console.log('[displaySMS_MMS_Message] -- parsedFailureReason: ' + JSON.stringify(parsedFailureReason))
 
             return (
@@ -57,7 +78,8 @@ class ChatComponents {
                         <p>{
                             (() => {
 
-                                let description = message.delivery_status === -1 ? 'SMS message sending to' : 'SMS message sent to'
+                                let description = message.delivery_status === -1 ? 'SMS message sending to' :
+                                    `SMS message ${isIncomingMessage ? "received" : "sent"} to`
 
                                 return (
                                     <div>
@@ -102,7 +124,7 @@ class ChatComponents {
                         }</p>
 
 
-                        {/* Display message content */}
+                        {/* Display message content while editing the SMS, ELSE display the actual Message */}
 
                         {(editedsmsgid * 1 === message.smsgid * 1) ?
                             (
@@ -130,7 +152,11 @@ class ChatComponents {
                                             //  console.log("[ShowSMSOrSMSChat] message: " + JSON.stringify(message));
 
                                             if (Array.isArray(messageContent)) {
-                                                return (<div><Attachments element={messageContent} /></div>)
+                                                return (<div>
+                                                    <PhotoProvider>
+                                                        <Attachments element={messageContent} />
+                                                    </PhotoProvider>
+                                                </div>)
 
                                             } else {
 
@@ -144,57 +170,84 @@ class ChatComponents {
 
                     </div>
 
+                    {/* Display SMS or MMS Options */}
                     {!(editedsmsgid * 1 === message.smsgid * 1) && (
                         <>
                             <div className='d-flex align-items-center mt-2 w-sm-100'>
 
-                                {message.direction == 2 && (
+                                {isIncomingMessage ? (
                                     <>
                                         <div className="cursor-pointer me-3 text-small" onClick={() => onClickSMSAction(parsedMessage, REQ_TYPE_SMS_ACTION.ACTION_REPLY)}>
                                             <img src={Reply} alt="Reply" className="replyIcons" />
                                         </div>
 
                                     </>
-                                )}
+                                )
+                                    :
+                                    (
 
-                                {message.direction == 1 && (
+                                        <>
+
+                                            {!isFailureSMS ? (
+                                                <>
+
+                                                    <div className="cursor-pointer me-3 text-small" onClick={() => onClickSMSAction(parsedMessage, REQ_TYPE_SMS_ACTION.ACTION_SEND_ANOTHER)}>
+                                                        <img src={Send} alt="Send another SMS message" className="replyIcons" />
+                                                    </div>
+
+                                                    {
+                                                        isOutBoundSMSSentBySelf &&
+                                                        (
+                                                            <>
+                                                                <div className='d-flex align-items-center cursor-pointer me-3' onClick={() => onClickSMSAction(message, REQ_TYPE_SMS_ACTION.ACTION_DELETE)}>
+                                                                    <img src={Delete} alt="" className='replyIcons' />
+                                                                </div>
+                                                            </>
+                                                        )}
+
+                                                </>
+                                            ) : (
+                                                <>
+
+                                                    <div className="cursor-pointer me-3 text-small" onClick={() => onClickSMSAction(message, REQ_TYPE_SMS_ACTION.ACTION_RESEND)}>
+                                                        <img src={Send} alt="Resend" title="" className="replyIcons" />
+                                                    </div>
+
+                                                    {message.msgtype && (message.msgtype !== IMConstants.WS_IM_MMS) && (
+
+                                                        <>
+                                                            <div className="cursor-pointer me-3 text-small" onClick={() => {
+                                                                setEditedMessage(parsedMessage.msg)
+                                                                setEditedsmsgid(message.smsgid)
+                                                            }}>
+                                                                <img src={Edit} alt="Edit" className="replyIcons" />
+                                                            </div>
+                                                        </>
+                                                    )}
+
+                                                </>
+
+                                            )}
+
+                                            <div className='d-flex align-items-center cursor-pointer me-3' onClick={() => onClickSMSAction(message, REQ_TYPE_SMS_ACTION.ACTION_DELETE)}>
+                                                <img src={Delete} alt="" className='replyIcons' />
+                                            </div>
+
+                                        </>
+
+                                    )
+                                }
+
+                                {message.msgtype && (message.msgtype !== IMConstants.WS_IM_MMS) && (
+
                                     <>
-
-                                        {message.delivery_status && message.delivery_status > 0 ? (
-                                            <>
-
-                                                <div className="cursor-pointer me-3 text-small" onClick={() => onClickSMSAction(parsedMessage, REQ_TYPE_SMS_ACTION.ACTION_SEND_ANOTHER)}>
-                                                    <img src={Send} alt="Send another SMS message" className="replyIcons" />
-                                                </div>
-
-                                            </>
-                                        ) : (
-                                            <>
-
-                                                <div className="cursor-pointer me-3 text-small" onClick={() => onClickSMSAction(message, REQ_TYPE_SMS_ACTION.ACTION_RESEND)}>
-                                                    <img src={Send} alt="Resend" title="" className="replyIcons" />
-                                                </div>
-
-                                                <div className="cursor-pointer me-3 text-small" onClick={() => {
-                                                    setEditedMessage(parsedMessage.msg)
-                                                    setEditedsmsgid(message.smsgid)
-                                                }}>
-                                                    <img src={Edit} alt="Edit" className="replyIcons" />
-                                                </div>
-                                            </>
-
-                                        )}
-
-                                        <div className='d-flex align-items-center cursor-pointer me-3' onClick={() => onClickSMSAction(message, REQ_TYPE_SMS_ACTION.ACTION_DELETE)}>
-                                            <img src={Delete} alt="" className='replyIcons' />
+                                        <div className='d-flex align-items-center cursor-pointer' onClick={() => onClickSMSAction(parsedMessage, REQ_TYPE_SMS_ACTION.ACTION_COPY)}>
+                                            <img src={Copy} alt="" className='replyIcons' />
                                         </div>
-
                                     </>
-                                )}
+                                )
 
-                                <div className='d-flex align-items-center cursor-pointer' onClick={() => onClickSMSAction(parsedMessage, REQ_TYPE_SMS_ACTION.ACTION_COPY)}>
-                                    <img src={Copy} alt="" className='replyIcons' />
-                                </div>
+                                }
 
                             </div>
 
@@ -218,6 +271,43 @@ class ChatComponents {
                 return
             }
 
+            const handleInputChange = (e) => {
+
+                const value = e.target.value;
+                console.log('[showSMSPopUp].handleInputChange to: ' + value + ',to: ' + smsPopupInputs.to)
+                if (/^\d*$/.test(value)) {
+                    setSMSPopupInputs(prevState => ({
+                        ...prevState,
+                        to: value
+                    }));
+                }
+
+            };
+
+            const handleSave = () => {
+
+                console.log('Save button clicked. smsPopupInputs :: ' + JSON.stringify(smsPopupInputs));
+
+                if (!smsPopupInputs.to) {
+
+                    alert('Please enter TO number');
+
+                    const inputElement = document.getElementById("toNumberInput");
+                    if (inputElement) {
+                        inputElement.focus();
+                    }
+                    return;
+                }
+
+                if (smsPopupInputs.to && (smsPopupInputs.to.length * 1) >= 3) {
+
+                    //smsPopupInputs.message = 'hi sunil'
+                    setPopUpVisible(false)
+                    onClick(smsPopupInputs)
+                }
+
+            };
+
             return (
                 <>
                     <MDBModal open={isPopUpVisible} tabIndex='-1' setOpen={setPopUpVisible}>
@@ -229,30 +319,22 @@ class ChatComponents {
                                 </MDBModalHeader>
                                 <MDBModalBody>
 
-                                    <p>
-                                        You cannot send SMS message as the phone number is no longer associated with the user. Try another phone number.
-                                    </p>
                                     <strong className="my-2 d-block">To Number</strong>
                                     <div className="ms-0 w-50">
-                                        <MDBInput
-                                            placeholder="Enter To Number"
-                                            type="text"
-                                            value={smsPopupInputs.to}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                console.log('[showSMSPopUp] to: ' + value + ',to: ' + smsPopupInputs.to)
-                                                if (/^\d*$/.test(value)) {
-                                                    setSMSPopupInputs(prevState => ({
-                                                        ...prevState,
-                                                        to: value
-                                                    }));
-                                                }
 
-                                            }}
-                                            maxLength="11"
-                                        />
+                                        {smsPopupInputs.isToNumberNonEditable ? <p>Cell Phone - {smsPopupInputs.to}</p> :
+
+                                            <MDBInput
+                                                placeholder="Enter To Number"
+                                                type="text"
+                                                value={smsPopupInputs.to}
+                                                id="toNumberInput"
+                                                onChange={handleInputChange}
+                                                maxLength="11"
+                                            />
+                                        }
                                         {smsPopupInputs.to && smsPopupInputs.to.length < 3 && (
-                                            <p className="text-danger">Please enter a phone number with at least 3 digits and not exceeding 11 digits.</p>
+                                            <p className="text-danger">{MessageConstants.SMS_ALERT_SHOW_SMS_PHNUMBER_LIMIT}</p>
                                         )}
                                     </div>
                                     <strong className="my-2 d-block">From Number</strong>
@@ -303,17 +385,7 @@ class ChatComponents {
                                     <MDBBtn color='secondary' onClick={() => setPopUpVisible(false)}>
                                         Cancel
                                     </MDBBtn>
-                                    <MDBBtn onClick={() => {
-
-                                        console.log('length :: ' + smsPopupInputs.to.length);
-                                        if ((smsPopupInputs.to.length * 1) >= 3) {
-
-                                            //smsPopupInputs.message = 'hi sunil'
-                                            setPopUpVisible(false)
-                                            onClick(smsPopupInputs)
-                                        }
-
-                                    }}>Send</MDBBtn>
+                                    <MDBBtn onClick={handleSave}>Send</MDBBtn>
                                 </MDBModalFooter>
                             </MDBModalContent>
                         </MDBModalDialog>
@@ -325,7 +397,7 @@ class ChatComponents {
         }
     }
 
-    showSMSBanner(data, setSMSBannerVisible, setIsModalVisible) {
+    showSMSBanner(data, setSMSBannerVisible, showSMSPopUp) {
 
         try {
 
@@ -333,9 +405,11 @@ class ChatComponents {
 
                 <div id='smspop-bar' className='w-100 bg-success rounded-6 px-4 mt-2 d-flex align-items-center justify-content-between py-1'
                     onClick={(event) => {
+
                         event.preventDefault()
                         event.stopPropagation()
-                        setIsModalVisible(true)
+                        showSMSPopUp()
+
                     }}>
                     <div style={{ fontSize: '13px', color: 'white' }}>
                         <>
@@ -352,9 +426,11 @@ class ChatComponents {
                     <div>
                         <MDBIcon fas icon='times' color='light'
                             onClick={(event) => {
+
                                 event.preventDefault()
                                 event.stopPropagation()
                                 setSMSBannerVisible(false)
+
                             }} />
                     </div>
                 </div>

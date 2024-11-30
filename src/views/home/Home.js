@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { MDBBadge, MDBCol, MDBContainer, MDBDropdown, MDBDropdownItem, MDBDropdownMenu, MDBDropdownToggle, MDBIcon, MDBInput, MDBRadio, MDBRow, MDBTabsContent, MDBTabsPane } from 'mdb-react-ui-kit'
 import { isIOS, isAndroid, isMobile } from 'react-device-detect';
 import { useLocation } from 'react-router-dom';
-import { Tooltip } from "react-tooltip";
+import { dialpad, Iconsearch } from '../../assets/images';
+import { useNavigate } from 'react-router-dom';
 
 
 import ChatsView from '../../components/chats/Chats'
@@ -17,11 +18,10 @@ import DIDComponent from '../../components/sms/DIDComponent';
 import Welcome from './Welcome';
 import Params from '../../config/Params'
 import Utils from '../../classes/utils/util';
-import SearchReasult from '../../components/home/SearchReasult';
+import SearchReasults from '../../components/home/SearchReasults';
+import DarkMode from '../../components/utils/DarkMode';
 import Contacts from '../../components/home/Contacts';
 import DialPad from '../../components/home/DialPad';
-import DarkMode from '../../components/utils/DarkMode';
-import { dialpad, Iconsearch } from '../../assets/images';
 
 let TAG = "[Home.js].";
 
@@ -38,10 +38,39 @@ const HomePage = () => {
   const [selectedUserStatus, setSelectedUserStatus] = useState(false);
   const [groupselectstatus, setGroupSelectStatus] = useState(false);
   const [didselectstatus, setDIDSelectStatus] = useState(false);
+  const [searchLoadingStatus, setSearchLoadingStatus] = useState(true);
+  const [isSettingsMenuVisible, setIsDropdownVisible] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchString, setSearchString] = useState('');
+
+  const [selectedStatus, setSelectedStatus] = useState('On Desktop');
+  const [activeTab, setActiveTab] = useState('SMS'); // Default active tab
+
+  const searchRef = useRef(null);
+  const searchResultRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  const navigate = useNavigate();
+
   const [componentsLoaded, setComponentsLoaded] = useState({
     header: false,
     users: false,
   });
+
+  const statusOptions = [
+    { label: 'On Desktop', bgClass: 'onlineStatus' },
+    { label: 'Be Right Back', bgClass: 'onlineStatus bg-danger' },
+    { label: 'Busy', bgClass: 'onlineStatus bg-danger' },
+    { label: 'Not At My Desk', bgClass: 'onlineStatus bg-danger' },
+    { label: 'Out To Lunch', bgClass: 'onlineStatus bg-danger' },
+    { label: 'Stepped Out', bgClass: 'onlineStatus bg-danger' },
+    { label: 'Appear Offline', bgClass: 'onlineStatus bg-secondary' },
+  ];
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
 
   const allComponentsLoaded = Object.values(componentsLoaded).every(Boolean);
 
@@ -90,23 +119,17 @@ const HomePage = () => {
       body.setAttribute("data-theme", "dark");
     }
 
-    const handleKeyDown = (event) => {
-
-      if (event.key === 'Escape') {
-
-        setSelectedUserStatus(false);
-        setSelectedUser(null)
-      }
-    };
-
     // Attach the event listener
     window.removeEventListener('keydown', handleKeyDown);
     window.addEventListener('keydown', handleKeyDown);
 
-    console.log(TAG + "keydown Keyboard [addEventListener]----------Pressed")
+    document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
 
     // Cleanup the event listener on component unmount
     return () => {
+
+      document.removeEventListener('mousedown', handleClickOutside);
       window.removeEventListener('keydown', handleKeyDown);
       console.log(TAG + "keydown Keyboard [removeEventListener]----------relesed")
     };
@@ -135,12 +158,30 @@ const HomePage = () => {
 
   }, [location.state]);
 
-
   //=============================      CLICK Functinos     ==================================
   const handleKeyDown = (event) => {
+
     if (event.key === 'Escape') {
 
-      setSelectedContact(null)
+      setSelectedUserStatus(false);
+      setSelectedUser(null);
+      setShowSearchResults(false);
+      setSearchString('');
+    }
+  };
+
+  const handleClickOutside = (event) => {
+
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+
+      setIsDropdownVisible(false);
+      setIsOpen(false);
+    }
+
+    if (searchRef.current && !searchRef.current.contains(event.target) &&
+      searchResultRef.current && !searchResultRef.current.contains(event.target)) {
+
+      setShowSearchResults(false);
     }
   };
 
@@ -170,11 +211,10 @@ const HomePage = () => {
     try {
       console.log(TAG + '.onClickGroup() -- ');
 
-      setDIDSelectStatus(false);
+      setDIDSelectStatus(true);
       setGroupSelectStatus(true);
       setSMSGroupData(sms_group_data);
       setSelectedContact(null);
-      setShowDropdown(false)
 
     } catch (e) {
 
@@ -191,7 +231,6 @@ const HomePage = () => {
       setDIDSelectStatus(false);
       setGroupSelectStatus(false);
       setSelectedContact(null);
-      setShowDropdown(false)
 
     } catch (e) {
 
@@ -222,6 +261,80 @@ const HomePage = () => {
     console.log(TAG + ".[dailpadNumberClick] :: " + user + "user Clicked in search", selectedUserStatus)
   };
 
+  const onClickSignOut = () => {
+
+    try {
+
+      let username = localStorage.getItem(Params.WS_LOGIN_USER);
+      localStorage.clear();
+
+      IMConnector.closeSocket()
+
+      navigate('/login');
+
+    } catch (e) {
+
+      console.log(TAG + '[onClickSignOut] Error :: ' + e);
+    }
+  }
+
+  const onClickSearchResult = (search_data) => {
+
+    try {
+
+      console.log(TAG + '.onClickSearchResult() -- ' + JSON.stringify(search_data));
+
+      setShowSearchResults(false);
+      setUserData(search_data);
+
+      evntEmitter.emit(EmitterConstants.EMMIT_ON_SEARCH_MESSAGE_BUDDY_CLICKED, search_data);
+
+    } catch (e) {
+
+      console.log(TAG + '[onClickSearchResult] Error :: ' + e);
+    }
+  }
+
+  const handleClearInput = () => {
+    try {
+      setSearchString('');
+    } catch (e) {
+      console.log(TAG + '[handleClearInput] Error :: ' + e);
+    }
+  }
+
+  const onStartSearch = (e) => {
+
+    try {
+
+      console.log(TAG + 'onStartSearch() -- ');
+
+      let searchKeyword = e.target.value;
+      setSearchString(searchKeyword);
+
+    } catch (e) {
+
+      console.log(TAG + '[onStartSearch] Error :: ' + e);
+    }
+  }
+
+  const onSearchKeyDown = (event) => {
+
+    try {
+
+      if (event.key === "Enter") {
+
+        console.log("Enter key was pressed!");
+
+        //send server request
+        SettingsHandler.loadSearchMessagesFromDB(searchString);
+      }
+
+    } catch (e) {
+
+      console.log('[onSearchKeyDown] Error :: ' + e);
+    }
+  }
 
   //=============================      GENERAL Functinos     ==================================
   const unRegisterEvents = () => {
@@ -230,6 +343,9 @@ const HomePage = () => {
 
       evntEmitter.removeAllListeners(EmitterConstants.EMITT_ON_IM_CONNECTED);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+
+
     } catch (e) {
 
       console.log(TAG + '[unRegisterEvents] Error :: ' + e);
@@ -242,7 +358,9 @@ const HomePage = () => {
     try {
 
       evntEmitter.on(EmitterConstants.EMITT_ON_IM_CONNECTED, handleEvent);
+
       window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener("beforeunload", handleBeforeUnload);
 
     } catch (e) {
 
@@ -250,6 +368,11 @@ const HomePage = () => {
     }
 
   }
+
+  const handleBeforeUnload = (event) => {
+    // close the IM connection while resfresh page
+    IMConnector.closeSocket()
+  };
 
   const onLoadHomePage = () => {
 
@@ -314,7 +437,6 @@ const HomePage = () => {
 
   console.log(TAG + "platform --- " + getPlatform() + " :: getPlatformNew :: " + getPlatformNew() + " :: isMobile :: " + isMobile);
 
-  const [activeTab, setActiveTab] = useState('SMS'); // Default active tab
 
   const handleBasicClick = (value) => {
     console.log(value, "handle basic click");
@@ -335,80 +457,13 @@ const HomePage = () => {
 
   }
 
-  const [isOpen, setIsOpen] = useState(false);
-
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const [selectedStatus, setSelectedStatus] = useState('On Desktop');
-
-
-  const statusOptions = [
-    { label: 'On Desktop', bgClass: 'onlineStatus' },
-    { label: 'Be Right Back', bgClass: 'onlineStatus bg-danger' },
-    { label: 'Busy', bgClass: 'onlineStatus bg-danger' },
-    { label: 'Not At My Desk', bgClass: 'onlineStatus bg-danger' },
-    { label: 'Out To Lunch', bgClass: 'onlineStatus bg-danger' },
-    { label: 'Stepped Out', bgClass: 'onlineStatus bg-danger' },
-    { label: 'Appear Offline', bgClass: 'onlineStatus bg-secondary' },
-  ];
-
   const handleStatusChange = (label) => {
     setSelectedStatus(label);
   };
 
-
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const dropdownRef = useRef(null);
-
-  const handleDropdownToggle = () => {
+  const showOrHideSettings = () => {
     setIsDropdownVisible((prev) => !prev);
   };
-
-  const handleClickOutside = (event) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setIsDropdownVisible(false);
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-
-
-
-  const [showDropdown, setShowDropdown] = useState(false);
-  const searchRef = useRef(null);
-
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
-    };
-
-    const handleEscKey = (event) => {
-      if (event.key === 'Escape') {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscKey);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscKey);
-    };
-  }, []);
-
-
 
 
   return (
@@ -420,21 +475,6 @@ const HomePage = () => {
           <div className="RcDrawer-paper">
             <div className="hOLPxV  shadow-end-0">
 
-              {showDropdown && (
-                <>
-                  <div className="overlayNew" style={{ display: showDropdown ? "block" : "none" }}>
-                    <div className="searchDropdown" ref={searchRef}>
-                      <div className="position-relative">
-                        <input type="text" placeholder='Search' value="meeting" />
-                        <img src={Iconsearch} alt="" className='inputIconEnd' />
-                      </div>
-                    </div>
-                    <div className="searchDropdownreasult">
-                      <SearchReasult />
-                    </div>
-                  </div>
-                </>)}
-
               <div
                 className={`d-flex align-items-center mainTabs ${activeTab === 'SMS' ? 'active' : ''}`}
                 onClick={() => handleBasicClick('SMS')}
@@ -442,8 +482,8 @@ const HomePage = () => {
                 <i className="fas fa-comments fa-lg"></i>
                 <div className='d-flex align-items-center'>
                   <span className="ms-2">SMS</span>
-                  <MDBBadge pill color='success' light className='ms-2'>
-                    10
+                  <MDBBadge pill color='danger' light className='ms-2'>
+
                   </MDBBadge>
                 </div>
               </div>
@@ -460,8 +500,8 @@ const HomePage = () => {
 
 
               <div
-                className={`d-flex align-items-center mainTabs ${activeTab === 'Phone' ? 'active' : ''}`}
-                onClick={() => handleBasicClick('Phone')}
+                className={`d-flex align-items-center mainTabs ${activeTab === 'Dialpad' ? 'active' : ''}`}
+                onClick={() => handleBasicClick('Dialpad')}
               >
                 <img src={dialpad} width={23} />
                 <div>
@@ -472,34 +512,40 @@ const HomePage = () => {
             </div>
 
             <div className="kycUAM" >
-              <div className="me-3 cursor-pointer" onClick={() => setShowDropdown(true)}>
+
+              <div className="me-3 cursor-pointer" onClick={() => setShowSearchResults(true)}>
                 <i className="fas fa-magnifying-glass fa-lg"></i>
               </div>
-              <div className="me-2 cursor-pointer" onClick={handleDropdownToggle}>
+
+              <div className="me-2 cursor-pointer" onClick={showOrHideSettings}>
                 <i className="fas fa-gear fa-lg"></i>
               </div>
-              {isDropdownVisible && (
+
+              {isSettingsMenuVisible && (
                 <div className='dropDownSettings' ref={dropdownRef}>
                   <div class="sc-czXssZ eWaaYG">
                     <h1 class="jupiter-MuiTypography-root sc-jJMGHv sc-jXmsZE fPsbdp iYwrwl">
-                      Surya Konala
+                      {localStorage.getItem("LOGIN_USER")?.split('@')[0]}
                     </h1>
-                    <button class="jupiter-MuiButtonBase-root jupiter-MuiButton-root jupiter-MuiButton-text RcButton-text sc-ksluoS sc-bpSgSL jFnKxu eQgYCX">
+                    {/* <button class="jupiter-MuiButtonBase-root jupiter-MuiButton-root jupiter-MuiButton-text RcButton-text sc-ksluoS sc-bpSgSL jFnKxu eQgYCX">
                       <span class="jupiter-MuiButton-label">
                         View profile
                       </span>
-                    </button>
+                    </button> */}
                   </div>
                   <ul>
                     <li className='p-0'>
                       <MDBDropdown animation={false}>
+
                         <MDBDropdownToggle>
                           <div className="d-flex align-items-center defaultFont">
                             <div className={statusOptions.find(option => option.label === selectedStatus)?.bgClass + ' rounded-circle me-2'}></div>
                             {selectedStatus}
                           </div>
                         </MDBDropdownToggle>
+
                         <MDBDropdownMenu className='dropdownWidth' responsive='end'>
+
                           <MDBDropdownItem link onClick={() => handleStatusChange('On Desktop')}>
                             <div className="d-flex align-items-center">
                               <div className='onlineStatus rounded-circle me-2'></div>
@@ -523,7 +569,9 @@ const HomePage = () => {
                             </div>
                           </form>
                         </MDBDropdownMenu>
+
                       </MDBDropdown>
+
                     </li>
                     <li onClick={toggleDropdown}>
                       <div className='d-flex align-items-center justify-content-between'>
@@ -531,40 +579,65 @@ const HomePage = () => {
                         <MDBIcon fas icon={isOpen ? "caret-down" : "caret-right"} color='secondary' />
                       </div>
                     </li>
-                    <div className={`dropdown-content ${isOpen ? "show" : ""}`}>
-                      <DarkMode />
-                    </div>
-                    <li>
+                    {/* <li>
                       Settings
-                    </li>
-                    <li>
+                      </li> */}
+                    <li onClick={onClickSignOut}>
                       Sign out
                     </li>
                   </ul>
 
+                  <div className={`dropdown-content ${isOpen ? "show" : ""}`}>
+                    <DarkMode setIsOpen={setIsOpen} />
+                  </div>
 
 
                 </div>
               )}
 
-
+              {showSearchResults && (
+                <>
+                  <div className='search-data-container'>
+                    <div className="overlayNew" style={{ display: showSearchResults ? "block" : "none" }}>
+                      <div className="searchDropdown" ref={searchRef}>
+                        <div className="position-relative">
+                          <input value={searchString} placeholder='Search' onChange={(e) => { onStartSearch(e) }} onKeyDown={onSearchKeyDown} />
+                          {!searchString ? (
+                            <img src={Iconsearch} alt="Search Icon" className='inputIconEnd' />
+                          ) : (
+                            <div
+                              onClick={handleClearInput}
+                              className='py-1 pe-1 cursor-pointer inputIconEnd'
+                            >
+                              <MDBIcon fas icon="times" className='' />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="searchDropdownreasult" ref={searchResultRef}>
+                        {
+                          (searchString && searchString !== '') ?
+                            <SearchReasults onClickSearch={onClickSearchResult} setSearchLoadingStatus={searchLoadingStatus} /> : ""
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </>)}
 
             </div >
           </div >
         </>
       )}
 
-      {/* <Header onLoad={() => handleComponentLoad('header')} /> */}
 
-
+      {/* <Header onLoad={() => handleComponentLoad('header')} onMessageSearch={onClickMessageSearch} searchLoadingStatus={searchLoadingStatus} setSearchLoadingStatus={setSearchLoadingStatus} /> */}
       <MDBContainer fluid>
         <MDBRow>
 
-          <MDBCol md={3} lg={3} sm={12} className='ps-0 pe-0 border-last border-2' id='HideGroups'>
-
-
+          <MDBCol md={3} lg={3} sm={12} className='ps-0 pe-0' id='HideGroups'>
 
             <MDBTabsContent>
+
               <MDBTabsPane open={activeTab === 'SMS'}>
                 <UsersComponent onLoad={() => handleComponentLoad('users')}
                   onClickGroup={onClickGroup}
@@ -573,17 +646,23 @@ const HomePage = () => {
                   onContactSelect={onContactSelect}
                   dailpadNumberClick={dailpadNumberClick} />
               </MDBTabsPane>
+
               <MDBTabsPane open={activeTab === 'Contacts'}>
-                <Contacts contacts_tab_selection={true} />
+                {activeTab === 'Contacts' && <Contacts contacts_tab_selection={true} />}
               </MDBTabsPane>
+
               <MDBTabsPane open={activeTab === 'Fax'}>Tab 3 content</MDBTabsPane>
-              <MDBTabsPane open={activeTab === 'Phone'}>
+
+              <MDBTabsPane open={activeTab === 'Dialpad'}>
                 <DialPad dailpadNumberClick={dailpadNumberClick}
                   onClickSMSDID={onClickSMSDID}
                   onDialSMSFromDialPad={onDialSMSFromDialPad} />
               </MDBTabsPane>
+
               <MDBTabsPane open={activeTab === 'More'}>Tab 5 content</MDBTabsPane>
+
             </MDBTabsContent>
+
           </MDBCol>
 
           {isMobile == false &&
@@ -594,7 +673,7 @@ const HomePage = () => {
 
                   console.log('this is not mobile ----------')}
 
-                <MDBCol md={9} lg={9} sm={12} className='mob-d-none ps-1'>
+                <MDBCol md={9} lg={9} sm={12} className='mob-d-none'>
 
                   {groupselectstatus || didselectstatus || (selectedContact != null && selectedContact.length > 0) ?
                     <>
@@ -604,8 +683,7 @@ const HomePage = () => {
                           {groupselectstatus == true ? (
 
                             <>
-                              <div className="d-flex">
-
+                              <div className='d-inline-flex w-100'>
                                 <div className='w-380px'>
                                   <DIDComponent onClickSMSDID={onClickSMSDID} groupData={smsgroupdata} />
                                 </div>
@@ -620,12 +698,9 @@ const HomePage = () => {
                                   }
 
                                 </div>
-                                <div className={`${groupselectstatus == false ? 'd-none' : 'w-360px'} `}>
-                                  <SearchReasult />
-                                </div>
+
                               </div>
                             </>
-
 
                           )
                             :
@@ -634,14 +709,14 @@ const HomePage = () => {
                               <div className="w-100">
                                 {
                                   didselectstatus || (selectedContact != null && selectedContact.length > 0) ?
+
                                     <>
                                       <div className="d-flex">
                                         <div className="w-100">
-                                          <ChatsView user_data={userData} />
+
+                                          < ChatsView user_data={userData} />
                                         </div>
-                                        <div className={`${groupselectstatus == false ? 'd-none' : 'w-360px'} `}>
-                                          <SearchReasult />
-                                        </div>
+
                                       </div>
                                     </>
                                     :
@@ -668,14 +743,6 @@ const HomePage = () => {
         </MDBRow>
 
       </MDBContainer>
-
-
-      <Tooltip anchorSelect=".sms" place="top" className="exampleTooltip">
-        All <br />
-        Individual <br />
-        Group <br />
-        Unread <br />
-      </Tooltip>
     </>
   )
 }

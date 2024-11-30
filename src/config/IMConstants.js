@@ -19,6 +19,8 @@ exports.IM_PROTO_GROUP_CHAT_READ_PROTOCOL = "<Message id=\"?\"><sid>?</sid><read
 exports.WS_IM_SMS = 50;
 exports.WS_IM_MMS = 51;
 
+exports.WS_SMS_GROUP_MSG_TYPE = 445;
+
 exports.WS_SMS_FEATURE_ENABLED = 472;
 exports.WS_SMS_FEATURE_DISABLED = 473;
 exports.WS_SMS_SEND_ALERT_DISPLAY_STATUS = 474;
@@ -65,6 +67,15 @@ exports.IM_CONNECT_VERSION = 1
 exports.IM_CONNECT_BULK_PSTREAM = 2
 exports.IM_CONNECT_DND_STATUS = 0
 exports.IM_CONNECT_GROUP_SMS = 1
+
+exports.SMS_GROUP = Object.freeze({
+
+    WS_SMS_GROUP_CREATE: 1,
+    WS_SMS_GROUP_DELETE: 2,
+    WS_SMS_GROUP_EDIT: 3
+});
+
+
 
 
 

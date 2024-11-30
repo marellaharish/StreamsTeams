@@ -376,6 +376,11 @@ const DIDComponent = ({ onClickSMSDID, groupData }) => {
 
             console.log('[onClickSpecificSMSDID] ---- Member details :: ' + JSON.stringify(member_data) + ' :: isMobile :: ' + isMobile);
 
+            if (groupData.isSearchItem) {
+
+                member_data.smsgid = groupData.smsgid;
+            }
+
             setSelectedDID(member_data.phnumber);//This is to Select the Specific DID in the DID Component.
 
             //Bellow code is to show the Chat.js upon clicking the Specific DID.
@@ -442,8 +447,15 @@ const DIDComponent = ({ onClickSMSDID, groupData }) => {
                                 </div>
                             ))
                         ) : (
-                            <>
-                                {groupDIDsList.map((member, index) => {
+
+                            (
+                                (groupDIDsList.length === 0) ? (
+
+                                    <div className='d-flex justify-content-center align-items-center h-100'>
+                                        <p>No GROUP DID's to display.</p>
+                                    </div>
+
+                                ) : (groupDIDsList.map((member, index) => {
 
                                     //console.log("member --- DID info ---- index :: " + index + " :: " + JSON.stringify(member) + " :: selectedDID :: " + selectedDID);
                                     //console.log("selectedDID ------" + selectedDID + " :: member :: " + JSON.stringify(member));
@@ -457,7 +469,7 @@ const DIDComponent = ({ onClickSMSDID, groupData }) => {
                                             <div className="d-flex flex-column w-100">
                                                 <div className="d-flex align-items-center justify-content-between">
                                                     <p className='ChatUserName'>{member.phnumber}</p>
-                                                    <p className='dateTextNew text-small'>{Utils.getFormatedDate(member.latest_time, Constants.DATE_FORMATS.WS_GROUP_DID_DATE)}</p>
+                                                    <p className='dateTextNew text-small'>{Utils.getFormatedDate(member.latest_time, Constants.DATE_FORMATS.WS_CHAT_RECENTS)}</p>
                                                 </div>
                                                 <div className='d-flex pt-1'>
                                                     <img src={SMS} alt="" style={{ width: 18, marginRight: 5 }} />
@@ -496,8 +508,10 @@ const DIDComponent = ({ onClickSMSDID, groupData }) => {
                                             </div>
                                         </div>
                                     )
-                                })}
-                            </>
+                                })
+                                )
+                            )
+
                         )}
                         {loadMore && (
 
